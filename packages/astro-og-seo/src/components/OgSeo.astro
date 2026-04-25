@@ -1,0 +1,102 @@
+---
+import { astroOgSeoConfig } from "virtual:astro-og-seo";
+import {
+  getOgImagePathname,
+  getOgImageType,
+  toIsoString,
+} from "../runtime";
+import type { OgSeoProps } from "../types";
+
+const {
+  title,
+  description,
+  lang = "en-US",
+  canonical,
+  alternates = [],
+  article,
+} = Astro.props as OgSeoProps;
+
+const canonicalUrl = new URL(
+  canonical?.toString() ?? Astro.url.pathname,
+  Astro.site,
+).toString();
+const imagePathname = getOgImagePathname(Astro.url.pathname, astroOgSeoConfig);
+const imageUrl = new URL(imagePathname, Astro.site).toString();
+const imageAlt = description ? `${title} - ${description}` : title;
+const publishedTime = toIsoString(article?.publishedTime);
+const modifiedTime = toIsoString(article?.modifiedTime) ?? publishedTime;
+const hasCustomImage = Astro.slots.has("image");
+const encodedStylesheet = Buffer.from(
+  astroOgSeoConfig.stylesheet,
+  "utf8",
+).toString("base64");
+---
+
+<Fragment>
+  <title>{title}</title>
+  {description && <meta name="description" content={description} />}
+  <link rel="canonical" href={canonicalUrl} />
+  {
+    alternates.map((alternate) => (
+      <link rel="alternate" hreflang={alternate.hrefLang} href={alternate.href} />
+    ))
+  }
+  <meta property="og:type" content={article ? "article" : "website"} />
+  <meta property="og:title" content={title} />
+  {description && <meta property="og:description" content={description} />}
+  <meta property="og:url" content={canonicalUrl} />
+  <meta property="og:site_name" content={astroOgSeoConfig.siteName} />
+  <meta property="og:locale" content={lang.replace("-", "_")} />
+  {
+    hasCustomImage && (
+      <Fragment>
+        <meta property="og:image" content={imageUrl} />
+        <meta
+          property="og:image:width"
+          content={String(astroOgSeoConfig.image.width)}
+        />
+        <meta
+          property="og:image:height"
+          content={String(astroOgSeoConfig.image.height)}
+        />
+        <meta
+          property="og:image:type"
+          content={getOgImageType(astroOgSeoConfig)}
+        />
+        <meta property="og:image:alt" content={imageAlt} />
+      </Fragment>
+    )
+  }
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content={title} />
+  {description && <meta name="twitter:description" content={description} />}
+  {
+    hasCustomImage && (
+      <Fragment>
+        <meta name="twitter:image" content={imageUrl} />
+        <meta name="twitter:image:alt" content={imageAlt} />
+      </Fragment>
+    )
+  }
+  {
+    publishedTime && (
+      <meta property="article:published_time" content={publishedTime} />
+    )
+  }
+  {
+    modifiedTime && (
+      <meta property="article:modified_time" content={modifiedTime} />
+    )
+  }
+  {
+    hasCustomImage && (
+      <template
+        data-astro-og-seo-image
+        data-pathname={Astro.url.pathname}
+        data-stylesheet={encodedStylesheet}
+      >
+        <slot name="image" />
+      </template>
+    )
+  }
+</Fragment>
