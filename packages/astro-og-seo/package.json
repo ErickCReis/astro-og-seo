@@ -41,7 +41,6 @@
     "@tailwindcss/vite": "^4.2.4",
     "@tsdown/css": "^0.21.10",
     "@types/node": "24",
-    "@typescript/native-preview": "7.0.0-dev.20260328.1",
     "astro": "^6.1.9",
     "bumpp": "^11.0.1",
     "tailwindcss": "^4.2.4",

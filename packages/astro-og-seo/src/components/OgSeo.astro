@@ -1,24 +1,24 @@
 ---
 import { astroOgSeoConfig } from "virtual:astro-og-seo";
 
-type OgSeoAlternate = {
+interface OgSeoAlternate {
   href: string;
   hrefLang: string;
-};
+}
 
-type OgSeoArticle = {
+interface OgSeoArticle {
   publishedTime: Date | string;
   modifiedTime?: Date | string;
-};
+}
 
-type OgSeoProps = {
+interface OgSeoProps {
   title: string;
   description?: string;
   lang?: string;
   canonical?: string | URL;
   alternates?: OgSeoAlternate[];
   article?: OgSeoArticle;
-};
+}
 
 function getPathSegments(pathname: string) {
   return pathname
@@ -51,8 +51,12 @@ function toIsoString(value: Date | string | undefined): string | undefined {
     return undefined;
   }
 
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
+  return value instanceof Date
+    ? value.toISOString()
+    : new Date(value).toISOString();
 }
+
+export interface Props extends OgSeoProps {}
 
 const {
   title,
@@ -61,7 +65,7 @@ const {
   canonical,
   alternates = [],
   article,
-} = Astro.props as OgSeoProps;
+} = Astro.props;
 
 const canonicalUrl = new URL(
   canonical?.toString() ?? Astro.url.pathname,
@@ -85,7 +89,11 @@ const encodedStylesheet = Buffer.from(
   <link rel="canonical" href={canonicalUrl} />
   {
     alternates.map((alternate) => (
-      <link rel="alternate" hreflang={alternate.hrefLang} href={alternate.href} />
+      <link
+        rel="alternate"
+        hreflang={alternate.hrefLang}
+        href={alternate.href}
+      />
     ))
   }
   <meta property="og:type" content={article ? "article" : "website"} />
@@ -106,10 +114,7 @@ const encodedStylesheet = Buffer.from(
           property="og:image:height"
           content={String(astroOgSeoConfig.image.height)}
         />
-        <meta
-          property="og:image:type"
-          content={getOgImageType()}
-        />
+        <meta property="og:image:type" content={getOgImageType()} />
         <meta property="og:image:alt" content={imageAlt} />
       </Fragment>
     )

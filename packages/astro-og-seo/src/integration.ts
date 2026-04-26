@@ -10,7 +10,7 @@ import type { AstroOgSeoOptions, ResolvedAstroOgSeoOptions } from "./types";
 const VIRTUAL_MODULE_ID = "virtual:astro-og-seo";
 const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
 const IMAGE_TEMPLATE_PATTERN =
-  /<template data-astro-og-seo-image data-pathname="([^"]*)" data-stylesheet="([^"]*)">([\s\S]*?)<\/template>/g;
+  /<template data-astro-og-seo-image data-pathname="([^"]*)"(?: data-stylesheet(?:="([^"]*)")?)?>([\s\S]*?)<\/template>/g;
 const PREVIEW_ENDPOINT = "/__astro-og-seo/preview";
 
 async function collectHtmlFiles(dir: string): Promise<string[]> {
@@ -99,7 +99,7 @@ function sendText(response: ServerResponse, statusCode: number, message: string)
   response.end(message);
 }
 
-export default function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
+export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
   let resolvedOptions: Omit<ResolvedAstroOgSeoOptions, "stylesheet"> | null = null;
 
   return {
@@ -122,9 +122,12 @@ export default function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration
       "astro:config:done": ({ injectTypes }) => {
         injectTypes({
           filename: "astro-og-seo.d.ts",
-          content: `/// <reference path="${fileURLToPath(
-            new URL("./virtual.d.ts", import.meta.url),
-          )}" />`,
+          content: `declare module "virtual:astro-og-seo" {
+  import type { ResolvedAstroOgSeoOptions } from "astro-og-seo";
+
+  export const astroOgSeoConfig: ResolvedAstroOgSeoOptions;
+}
+`,
         });
       },
       "astro:server:setup": ({ server }) => {

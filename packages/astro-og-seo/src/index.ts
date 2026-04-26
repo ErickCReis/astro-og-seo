@@ -1,8 +1,2 @@
-export { default } from "./integration";
-export type {
-  AstroOgSeoImageFormat,
-  AstroOgSeoOptions,
-  OgSeoAlternate,
-  OgSeoArticle,
-  OgSeoProps,
-} from "./types";
+export { astroOgSeo } from "./integration";
+export type { AstroOgSeoImageFormat, AstroOgSeoOptions, ResolvedAstroOgSeoOptions } from "./types";

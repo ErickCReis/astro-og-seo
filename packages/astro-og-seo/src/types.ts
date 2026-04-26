@@ -22,22 +22,3 @@ export type ResolvedAstroOgSeoOptions = {
     format: AstroOgSeoImageFormat;
   };
 };
-
-export type OgSeoAlternate = {
-  href: string;
-  hrefLang: string;
-};
-
-export type OgSeoArticle = {
-  publishedTime: Date | string;
-  modifiedTime?: Date | string;
-};
-
-export type OgSeoProps = {
-  title: string;
-  description?: string;
-  lang?: string;
-  canonical?: string | URL;
-  alternates?: OgSeoAlternate[];
-  article?: OgSeoArticle;
-};

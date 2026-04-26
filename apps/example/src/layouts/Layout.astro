@@ -1,0 +1,45 @@
+---
+import OgSeo from "astro-og-seo/OgSeo.astro";
+
+export interface Props {
+	title?: string;
+	description?: string;
+}
+
+const {
+	title = "Astro OG SEO Example",
+	description = "An Astro example app using the local astro-og-seo package.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="generator" content={Astro.generator} />
+		<OgSeo title={title} description={description}>
+			<Fragment slot="image">
+				<div class="og-image">
+					<p>Astro OG SEO</p>
+					<h1>{title}</h1>
+					<span>{description}</span>
+				</div>
+			</Fragment>
+		</OgSeo>
+	</head>
+	<body>
+		<slot />
+	</body>
+</html>
+
+<style>
+	html,
+	body {
+		margin: 0;
+		width: 100%;
+		height: 100%;
+	}
+</style>

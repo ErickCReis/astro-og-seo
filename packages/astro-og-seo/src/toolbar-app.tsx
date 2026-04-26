@@ -182,7 +182,7 @@ const ToolbarPanel: Component = () => {
             <div class="mb-2 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.14em] text-cyan-300">
               Astro OG SEO
             </div>
-            <h2 class="m-0 break-words text-lg font-semibold leading-tight text-white">
+            <h2 class="m-0 wrap-break-word text-lg font-semibold leading-tight text-white">
               {window.location.pathname}
             </h2>
             <div class="mt-3 flex flex-wrap gap-2">
@@ -201,7 +201,7 @@ const ToolbarPanel: Component = () => {
                 {(src) => (
                   <img
                     alt="Open Graph image preview"
-                    class="mb-3 aspect-[1200/630] w-full rounded-lg bg-black object-cover"
+                    class="mb-3 aspect-1200/630 w-full rounded-lg bg-black object-cover"
                     src={src()}
                   />
                 )}
