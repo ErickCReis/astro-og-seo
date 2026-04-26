@@ -111,7 +111,7 @@ export default function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration
           id: "astro-og-seo",
           name: "SEO",
           icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-4.2-4.2"/><path d="M8 11h6"/><path d="M11 8v6"/></svg>',
-          entrypoint: new URL("./toolbar-app.ts", import.meta.url),
+          entrypoint: new URL("./toolbar-app.mjs", import.meta.url),
         });
         updateConfig({
           vite: {
