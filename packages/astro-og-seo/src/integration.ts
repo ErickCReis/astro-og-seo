@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroConfig, AstroIntegration } from "astro";
 import type { Plugin } from "vite-plus";
-import { getOgImageType, renderOgImage, writeOgImage } from "./runtime";
+import { renderOgImage, writeOgImage } from "./runtime";
 import type { AstroOgSeoOptions, ResolvedAstroOgSeoOptions } from "./types";
 
 const VIRTUAL_MODULE_ID = "virtual:astro-og-seo";
@@ -164,7 +164,7 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
             const image = await renderOgImage(payload.html, config);
 
             response.statusCode = 200;
-            response.setHeader("content-type", getOgImageType(config));
+            response.setHeader("content-type", `image/${config.image.format}`);
             response.end(image);
           } catch (error) {
             sendText(

@@ -3,14 +3,6 @@ import { dirname, join } from "node:path";
 import { render } from "takumi-js";
 import type { ResolvedAstroOgSeoOptions } from "./types";
 
-function getContentType(format: ResolvedAstroOgSeoOptions["image"]["format"]): string {
-  return format === "jpeg" ? "image/jpeg" : `image/${format}`;
-}
-
-function getExtension(format: ResolvedAstroOgSeoOptions["image"]["format"]) {
-  return format === "jpeg" ? "jpg" : format;
-}
-
 function getPathSegments(pathname: string) {
   return pathname
     .split("/")
@@ -22,9 +14,8 @@ function getPathSegments(pathname: string) {
 export function getOgImagePathname(pathname: string, config: ResolvedAstroOgSeoOptions): string {
   const outputDir = config.outputDir.replace(/^\/+|\/+$/g, "");
   const segments = getPathSegments(pathname);
-  const extension = getExtension(config.image.format);
 
-  return `/${[outputDir, ...segments, `index.${extension}`].join("/")}`;
+  return `/${[outputDir, ...segments, `index.${config.image.format}`].join("/")}`;
 }
 
 function getOutputPath(pathname: string, config: ResolvedAstroOgSeoOptions) {
@@ -62,16 +53,4 @@ export async function writeOgImage(
 
   await mkdir(dirname(outputPath), { recursive: true });
   await writeFile(outputPath, image);
-}
-
-export function getOgImageType(config: ResolvedAstroOgSeoOptions): string {
-  return getContentType(config.image.format);
-}
-
-export function toIsoString(value: Date | string | undefined): string | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  return value instanceof Date ? value.toISOString() : new Date(value).toISOString();
 }

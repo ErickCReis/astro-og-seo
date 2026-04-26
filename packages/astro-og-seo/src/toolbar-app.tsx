@@ -61,18 +61,6 @@ function getOgTemplate() {
   return document.head.querySelector<HTMLTemplateElement>("template[data-astro-og-seo-image]");
 }
 
-function hasFieldValue(field: SeoField) {
-  return Boolean(field.value?.trim());
-}
-
-function getFieldDisplayValue(field: SeoField) {
-  return field.value?.trim() || "Not present on this page";
-}
-
-function getMissingRequiredCount(fields: SeoField[]) {
-  return fields.filter((field) => field.required && !hasFieldValue(field)).length;
-}
-
 async function renderPreview(
   template: HTMLTemplateElement,
   setPreview: (state: PreviewState) => void,
@@ -100,7 +88,7 @@ async function renderPreview(
 
     setPreview({
       status: "ready",
-      message: "Inline OG image slot rendered with Takumi.",
+      message: "",
       src,
     });
   } catch (error) {
@@ -112,47 +100,40 @@ async function renderPreview(
   }
 }
 
-const StatusPill: Component<{ tone: "ok" | "warn" | "muted"; children: string }> = (props) => (
-  <span
-    classList={{
-      "border-emerald-300/20 bg-emerald-400/10 text-emerald-200": props.tone === "ok",
-      "border-amber-300/20 bg-amber-400/10 text-amber-100": props.tone === "warn",
-      "border-slate-300/15 bg-slate-400/10 text-slate-300": props.tone === "muted",
-    }}
-    class="inline-flex min-h-6 items-center rounded-full border px-2.5 font-mono text-[11px] font-bold uppercase leading-none"
-  >
-    {props.children}
-  </span>
-);
-
 const FieldRow: Component<{ field: SeoField }> = (props) => {
-  const hasValue = () => hasFieldValue(props.field);
-  const tone = () => (hasValue() || !props.field.required ? "ok" : "warn");
+  const hasValue = () => Boolean(props.field.value?.trim());
   const status = () => (hasValue() ? "set" : props.field.required ? "missing" : "empty");
 
   return (
-    <li class="grid gap-1 border-t border-slate-700/60 py-3 first:border-t-0">
-      <div class="flex items-center justify-between gap-3">
-        <span class="text-[13px] font-semibold text-slate-100">{props.field.label}</span>
-        <StatusPill tone={tone()}>{status()}</StatusPill>
-      </div>
-      <p
+    <tr class="border-t border-slate-800/80 first:border-t-0">
+      <th class="w-32 py-3 pr-3 text-left align-top text-[13px] font-semibold text-slate-100">
+        {props.field.label}
+      </th>
+      <td
         classList={{
           "text-slate-500": !hasValue(),
           "text-slate-300": hasValue(),
         }}
-        class="m-0 overflow-wrap-anywhere font-mono text-xs leading-5"
+        class="py-3 pr-3 align-top font-mono text-xs leading-5 overflow-wrap-anywhere"
       >
-        {getFieldDisplayValue(props.field)}
-      </p>
-    </li>
+        {props.field.value?.trim() || "Not present on this page"}
+      </td>
+      <td
+        classList={{
+          "text-amber-100": props.field.required && !hasValue(),
+          "text-slate-400": !props.field.required || hasValue(),
+        }}
+        class="w-20 py-3 text-right align-top font-mono text-[11px] uppercase leading-5"
+      >
+        {status()}
+      </td>
+    </tr>
   );
 };
 
 const ToolbarPanel: Component = () => {
   const fields = readSeoFields();
   const template = getOgTemplate();
-  const missingRequiredCount = getMissingRequiredCount(fields);
   const [preview, setPreview] = createSignal<PreviewState>(
     template
       ? { status: "idle", message: "Preparing image preview...", src: null }
@@ -185,14 +166,6 @@ const ToolbarPanel: Component = () => {
             <h2 class="m-0 wrap-break-word text-lg font-semibold leading-tight text-white">
               {window.location.pathname}
             </h2>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <StatusPill tone={missingRequiredCount === 0 ? "ok" : "warn"}>
-                {`${missingRequiredCount} missing`}
-              </StatusPill>
-              <StatusPill tone={template ? "ok" : "muted"}>
-                {template ? "image slot" : "no image slot"}
-              </StatusPill>
-            </div>
           </header>
 
           <Show when={template}>
@@ -219,9 +192,18 @@ const ToolbarPanel: Component = () => {
           </Show>
 
           <section class="px-4 py-2">
-            <ul class="m-0 list-none p-0">
-              <For each={fields}>{(field) => <FieldRow field={field} />}</For>
-            </ul>
+            <table class="w-full table-fixed border-collapse">
+              <thead>
+                <tr class="font-mono text-[11px] uppercase leading-none text-slate-500">
+                  <th class="w-32 py-2 pr-3 text-left font-semibold">Field</th>
+                  <th class="py-2 pr-3 text-left font-semibold">Value</th>
+                  <th class="w-20 py-2 text-right font-semibold">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <For each={fields}>{(field) => <FieldRow field={field} />}</For>
+              </tbody>
+            </table>
           </section>
         </section>
       </astro-dev-toolbar-window>

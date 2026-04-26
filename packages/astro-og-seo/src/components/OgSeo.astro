@@ -1,5 +1,6 @@
 ---
 import { astroOgSeoConfig } from "virtual:astro-og-seo";
+import { getOgImagePathname } from "astro-og-seo";
 
 interface OgSeoAlternate {
   href: string;
@@ -7,8 +8,8 @@ interface OgSeoAlternate {
 }
 
 interface OgSeoArticle {
-  publishedTime: Date | string;
-  modifiedTime?: Date | string;
+  publishedTime: Date;
+  modifiedTime?: Date;
 }
 
 interface OgSeoProps {
@@ -18,42 +19,6 @@ interface OgSeoProps {
   canonical?: string | URL;
   alternates?: OgSeoAlternate[];
   article?: OgSeoArticle;
-}
-
-function getPathSegments(pathname: string) {
-  return pathname
-    .split("/")
-    .map((segment) => segment.trim())
-    .filter(Boolean)
-    .map((segment) => encodeURIComponent(decodeURIComponent(segment)));
-}
-
-function getExtension(format: "png" | "jpeg" | "webp") {
-  return format === "jpeg" ? "jpg" : format;
-}
-
-function getOgImagePathname(pathname: string) {
-  const outputDir = astroOgSeoConfig.outputDir.replace(/^\/+|\/+$/g, "");
-  const segments = getPathSegments(pathname);
-  const extension = getExtension(astroOgSeoConfig.image.format);
-
-  return `/${[outputDir, ...segments, `index.${extension}`].join("/")}`;
-}
-
-function getOgImageType() {
-  return astroOgSeoConfig.image.format === "jpeg"
-    ? "image/jpeg"
-    : `image/${astroOgSeoConfig.image.format}`;
-}
-
-function toIsoString(value: Date | string | undefined): string | undefined {
-  if (!value) {
-    return undefined;
-  }
-
-  return value instanceof Date
-    ? value.toISOString()
-    : new Date(value).toISOString();
 }
 
 export interface Props extends OgSeoProps {}
@@ -71,11 +36,11 @@ const canonicalUrl = new URL(
   canonical?.toString() ?? Astro.url.pathname,
   Astro.site,
 ).toString();
-const imagePathname = getOgImagePathname(Astro.url.pathname);
+const imagePathname = getOgImagePathname(Astro.url.pathname, astroOgSeoConfig);
 const imageUrl = new URL(imagePathname, Astro.site).toString();
 const imageAlt = description ? `${title} - ${description}` : title;
-const publishedTime = toIsoString(article?.publishedTime);
-const modifiedTime = toIsoString(article?.modifiedTime) ?? publishedTime;
+const publishedTime = article?.publishedTime.toISOString();
+const modifiedTime = article?.modifiedTime?.toISOString() ?? publishedTime;
 const hasCustomImage = Astro.slots.has("image");
 const encodedStylesheet = Buffer.from(
   astroOgSeoConfig.stylesheet,
@@ -114,7 +79,10 @@ const encodedStylesheet = Buffer.from(
           property="og:image:height"
           content={String(astroOgSeoConfig.image.height)}
         />
-        <meta property="og:image:type" content={getOgImageType()} />
+        <meta
+          property="og:image:type"
+          content={`image/${astroOgSeoConfig.image.format}`}
+        />
         <meta property="og:image:alt" content={imageAlt} />
       </Fragment>
     )
