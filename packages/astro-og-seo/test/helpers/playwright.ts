@@ -23,16 +23,33 @@ export async function waitForUrl(url: string, timeoutMs = 60_000) {
   throw new Error(`Timed out waiting for ${url}`);
 }
 
-export async function stopProcess(process: ChildProcess | undefined) {
-  if (!process || process.exitCode !== null) {
+export async function stopProcess(child: ChildProcess | undefined) {
+  if (!child || child.exitCode !== null) {
     return;
   }
 
-  process.kill("SIGTERM");
-  await Promise.race([once(process, "exit"), new Promise((resolve) => setTimeout(resolve, 5_000))]);
+  if (child.pid) {
+    try {
+      process.kill(-child.pid, "SIGTERM");
+    } catch {
+      child.kill("SIGTERM");
+    }
+  } else {
+    child.kill("SIGTERM");
+  }
 
-  if (process.exitCode === null) {
-    process.kill("SIGKILL");
+  await Promise.race([once(child, "exit"), new Promise((resolve) => setTimeout(resolve, 5_000))]);
+
+  if (child.exitCode === null) {
+    if (child.pid) {
+      try {
+        process.kill(-child.pid, "SIGKILL");
+      } catch {
+        child.kill("SIGKILL");
+      }
+    } else {
+      child.kill("SIGKILL");
+    }
   }
 }
 
@@ -46,7 +63,8 @@ export function startExampleDevServer(port: number) {
         ...process.env,
         ASTRO_TELEMETRY_DISABLED: "1",
       },
-      stdio: ["ignore", "pipe", "pipe"],
+      detached: true,
+      stdio: "ignore",
     },
   );
 }
