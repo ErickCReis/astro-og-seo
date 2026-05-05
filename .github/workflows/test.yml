@@ -1,7 +1,6 @@
 name: Test
 
 on:
-  push:
   pull_request:
 
 permissions:
@@ -18,6 +17,7 @@ jobs:
           cache: true
       - run: vp install
       - run: vp exec playwright install --with-deps chromium
+      - run: vp run astro-og-seo#build
       - run: vp check
       - run: vp run astro-og-seo#test:all
       - run: vp run -r build
