@@ -62,6 +62,7 @@ export function startExampleDevServer(port: number) {
       env: {
         ...process.env,
         ASTRO_TELEMETRY_DISABLED: "1",
+        CI: "false",
       },
       detached: true,
       stdio: "ignore",
