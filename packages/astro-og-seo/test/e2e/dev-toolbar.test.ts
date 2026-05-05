@@ -15,30 +15,55 @@ async function clickSeoToolbarApp(page: Page) {
   await page.waitForTimeout(500);
 
   const clicked = await page.evaluate(() => {
+    function getElementLabel(element: Element) {
+      const text = element.textContent?.trim() ?? "";
+
+      return [
+        element.getAttribute("aria-label"),
+        element.getAttribute("title"),
+        element.getAttribute("id"),
+        element.getAttribute("class"),
+        element.getAttribute("data-app-id"),
+        text.length <= 80 ? text : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+    }
+
+    function isVisibleControl(element: Element) {
+      if (!(element instanceof HTMLElement)) {
+        return false;
+      }
+
+      const rect = element.getBoundingClientRect();
+
+      if (rect.width === 0 || rect.height === 0) {
+        return false;
+      }
+
+      return (
+        element.matches(
+          'button,a,[role="button"],astro-dev-toolbar-app,astro-dev-toolbar-button',
+        ) || Boolean(element.onclick)
+      );
+    }
+
     function visit(root: Document | ShadowRoot | Element): boolean {
       const elements = root.querySelectorAll("*");
 
       for (const element of elements) {
-        const label = [
-          element.textContent,
-          element.getAttribute("aria-label"),
-          element.getAttribute("title"),
-          element.getAttribute("id"),
-        ]
-          .filter(Boolean)
-          .join(" ")
-          .toLowerCase();
-
-        if (
-          label.includes("seo") ||
-          label.includes("astro-og-seo") ||
-          label.includes("open graph")
-        ) {
-          (element as HTMLElement).click();
+        if (element.shadowRoot && visit(element.shadowRoot)) {
           return true;
         }
 
-        if (element.shadowRoot && visit(element.shadowRoot)) {
+        const label = getElementLabel(element);
+
+        if (
+          isVisibleControl(element) &&
+          (label.includes("seo") || label.includes("astro-og-seo") || label.includes("open graph"))
+        ) {
+          (element as HTMLElement).click();
           return true;
         }
       }
