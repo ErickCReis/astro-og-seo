@@ -49,7 +49,11 @@ describe("toolbar app browser rendering", () => {
     const window = canvas.querySelector("astro-dev-toolbar-window");
 
     expect(window).toBeTruthy();
-    expect(canvas.querySelector('img[alt="Open Graph image preview"]')).toBeTruthy();
+
+    await vi.waitFor(() => {
+      expect(page.getByAltText("Open Graph image preview", { exact: true }).element()).toBeTruthy();
+    });
+
     await page.screenshot({ path: "toolbar-app-page.png", save: true });
   });
 });
