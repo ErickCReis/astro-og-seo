@@ -19,11 +19,8 @@ jobs:
         with:
           node-version: "24"
           cache: true
-      - run: vp install
-      - run: vp exec playwright install --with-deps chromium
-      - run: vp check
-      - run: vp run astro-og-seo#test:all
-      - run: vp run astro-og-seo#build
+      - run: vp pack
+        working-directory: packages/astro-og-seo
       - name: Publish astro-og-seo
         working-directory: packages/astro-og-seo
         run: npm publish --provenance --access public
