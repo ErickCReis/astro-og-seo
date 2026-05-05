@@ -1,0 +1,15 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout
+  title="Hello World"
+  description="Article image for a nested route."
+  canonical="https://example.test/articles/hello-world/"
+  article={{
+    publishedTime: new Date("2026-01-02T03:04:05.000Z"),
+    modifiedTime: new Date("2026-02-03T04:05:06.000Z"),
+  }}
+>
+  <article>Hello</article>
+</Layout>

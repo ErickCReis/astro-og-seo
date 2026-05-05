@@ -1,0 +1,15 @@
+---
+import OgSeo from "../../../../../src/components/OgSeo.astro";
+
+const { title = "No Image", description = "No image slot page." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <OgSeo title={title} description={description} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

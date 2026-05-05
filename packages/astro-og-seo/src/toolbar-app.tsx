@@ -17,7 +17,7 @@ type PreviewState =
   | { status: "ready"; message: string; src: string }
   | { status: "error"; message: string; src: null };
 
-const previewEndpoint = "/__astro-og-seo/preview";
+export const previewEndpoint = "/__astro-og-seo/preview";
 
 function readMeta(selector: string) {
   return document.head.querySelector<HTMLMetaElement>(selector)?.content ?? null;
@@ -27,7 +27,7 @@ function readLink(selector: string) {
   return document.head.querySelector<HTMLLinkElement>(selector)?.href ?? null;
 }
 
-function readSeoFields(): SeoField[] {
+export function readSeoFields(): SeoField[] {
   return [
     { label: "Title", value: document.title, required: true },
     {
@@ -57,11 +57,11 @@ function readSeoFields(): SeoField[] {
   ];
 }
 
-function getOgTemplate() {
+export function getOgTemplate() {
   return document.head.querySelector<HTMLTemplateElement>("template[data-astro-og-seo-image]");
 }
 
-async function renderPreview(
+export async function renderPreview(
   template: HTMLTemplateElement,
   setPreview: (state: PreviewState) => void,
 ) {

@@ -1,17 +1,14 @@
-name: Publish
+name: Test
 
 on:
   push:
-    branches: [main]
-    paths:
-      - packages/astro-og-seo/package.json
+  pull_request:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
-  publish:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -23,7 +20,12 @@ jobs:
       - run: vp exec playwright install --with-deps chromium
       - run: vp check
       - run: vp run astro-og-seo#test:all
-      - run: vp run astro-og-seo#build
-      - name: Publish astro-og-seo
-        working-directory: packages/astro-og-seo
-        run: npm publish --provenance --access public
+      - run: vp run -r build
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: test-artifacts
+          path: |
+            packages/astro-og-seo/test/.artifacts
+            packages/astro-og-seo/test/__screenshots__
+            packages/astro-og-seo/coverage
