@@ -1,10 +1,32 @@
+import { readdir, readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { AstroIntegration } from "astro";
-import { generateOgImagesFromHtmlDir } from "./build";
 import { resolveAstroOgSeoOptions } from "./options";
 import { handlePreviewRequest, PREVIEW_ENDPOINT } from "./preview";
+import { writeOgImage } from "./runtime";
 import { createVirtualModulePlugin } from "./virtual-module";
 import type { AstroOgSeoOptions, ResolvedAstroOgSeoOptions } from "./types";
+
+const imageTemplatePattern =
+  /<template data-astro-og-seo-image data-pathname="([^"]*)"(?: data-stylesheet(?:="([^"]*)")?)?>([\s\S]*?)<\/template>/g;
+
+async function collectHtmlFiles(dir: string): Promise<string[]> {
+  const entries = await readdir(dir, { withFileTypes: true });
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const path = join(dir, entry.name);
+
+    if (entry.isDirectory()) {
+      files.push(...(await collectHtmlFiles(path)));
+    } else if (entry.isFile() && path.endsWith(".html")) {
+      files.push(path);
+    }
+  }
+
+  return files;
+}
 
 function getNodeRenderAliases() {
   return {
@@ -62,10 +84,30 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
           return;
         }
 
-        const generatedCount = await generateOgImagesFromHtmlDir(
-          fileURLToPath(dir),
-          resolvedOptions,
-        );
+        const htmlFiles = await collectHtmlFiles(fileURLToPath(dir));
+        let generatedCount = 0;
+
+        for (const file of htmlFiles) {
+          const html = await readFile(file, "utf8");
+          const matches = [...html.matchAll(imageTemplatePattern)];
+
+          if (matches.length === 0) {
+            continue;
+          }
+
+          for (const match of matches) {
+            const [, pathname = "/", encodedStylesheet = "", imageHtml = ""] = match;
+            const stylesheet = Buffer.from(encodedStylesheet, "base64").toString("utf8");
+
+            await writeOgImage(imageHtml, pathname, {
+              ...resolvedOptions,
+              stylesheet,
+            });
+            generatedCount += 1;
+          }
+
+          await writeFile(file, html.replace(imageTemplatePattern, ""));
+        }
 
         logger.info(
           `generated ${generatedCount} Open Graph image${generatedCount === 1 ? "" : "s"}`,

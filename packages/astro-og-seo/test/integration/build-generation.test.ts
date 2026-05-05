@@ -1,27 +1,12 @@
 import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, test } from "vite-plus/test";
-import {
-  extractImageTemplates,
-  generateOgImagesFromHtmlDir,
-  removeImageTemplates,
-} from "../../src/build";
-import type { ResolvedAstroOgSeoOptions } from "../../src/types";
+import { pathToFileURL } from "node:url";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
+import { astroOgSeo } from "../../src/integration";
 import { assertImage, expectImageToMatchSnapshot } from "../helpers/image";
 import { createTempDir, removeTempDir } from "../helpers/paths";
 
 let tempDir: string;
-
-const resolvedOptions = {
-  siteName: "Site",
-  outDir: "",
-  outputDir: "social",
-  image: {
-    width: 600,
-    height: 315,
-    format: "png",
-  },
-} satisfies Omit<ResolvedAstroOgSeoOptions, "stylesheet">;
 
 beforeEach(async () => {
   tempDir = await createTempDir("build");
@@ -31,21 +16,32 @@ afterEach(async () => {
   await removeTempDir(tempDir);
 });
 
-describe("build image generation", () => {
-  test("extracts and removes image templates", () => {
-    const stylesheet = Buffer.from(".card{}").toString("base64");
-    const html = `<html><head><template data-astro-og-seo-image data-pathname="/blog/post/" data-stylesheet="${stylesheet}"><div>Image</div></template></head></html>`;
-
-    expect(extractImageTemplates(html)).toEqual([
-      {
-        pathname: "/blog/post/",
-        stylesheet: ".card{}",
-        html: "<div>Image</div>",
-      },
-    ]);
-    expect(removeImageTemplates(html)).not.toContain("data-astro-og-seo-image");
+async function runBuildDone(outDir: string) {
+  const logger = { info: vi.fn() };
+  const integration = astroOgSeo({
+    siteName: "Site",
+    outputDir: "social",
+    image: {
+      width: 600,
+      height: 315,
+      format: "png",
+    },
   });
 
+  await integration.hooks["astro:config:setup"]?.({
+    addDevToolbarApp: vi.fn(),
+    config: { outDir: pathToFileURL(`${outDir}/`) },
+    updateConfig: vi.fn(),
+  } as never);
+  await integration.hooks["astro:build:done"]?.({
+    dir: pathToFileURL(`${outDir}/`),
+    logger,
+  } as never);
+
+  return logger;
+}
+
+describe("Astro build image generation", () => {
   test("generates images from nested HTML files", async () => {
     const htmlDir = join(tempDir, "dist", "blog", "post");
     const outDir = join(tempDir, "dist");
@@ -59,14 +55,11 @@ describe("build image generation", () => {
       `<html><head><template data-astro-og-seo-image data-pathname="/blog/post/" data-stylesheet="${stylesheet}"><div class="card">Build</div></template></head><body>Post</body></html>`,
     );
 
-    const count = await generateOgImagesFromHtmlDir(outDir, {
-      ...resolvedOptions,
-      outDir,
-    });
+    const logger = await runBuildDone(outDir);
     const html = await readFile(join(htmlDir, "index.html"), "utf8");
     const image = await readFile(join(outDir, "social", "blog", "post", "index.png"));
 
-    expect(count).toBe(1);
+    expect(logger.info).toHaveBeenCalledWith("generated 1 Open Graph image");
     expect(html).not.toContain("data-astro-og-seo-image");
     await assertImage(image, { format: "png", width: 600, height: 315 });
     await expectImageToMatchSnapshot(image, "build-generation-png");
@@ -79,20 +72,16 @@ describe("build image generation", () => {
     await mkdir(join(outDir, "plain"), { recursive: true });
     await writeFile(htmlPath, "<html><head></head><body>Plain</body></html>");
 
-    const count = await generateOgImagesFromHtmlDir(outDir, {
-      ...resolvedOptions,
-      outDir,
-    });
+    const logger = await runBuildDone(outDir);
 
-    expect(count).toBe(0);
+    expect(logger.info).toHaveBeenCalledWith("generated 0 Open Graph images");
     expect(await readFile(htmlPath, "utf8")).toBe("<html><head></head><body>Plain</body></html>");
   });
 
-  test("supports multiple templates in one HTML file with an injected writer", async () => {
+  test("supports multiple templates in one HTML file", async () => {
     const outDir = join(tempDir, "dist");
     const htmlPath = join(outDir, "index.html");
     const stylesheet = Buffer.from(".one{}").toString("base64");
-    const writes: Array<{ html: string; pathname: string; stylesheet: string }> = [];
 
     await mkdir(outDir, { recursive: true });
     await writeFile(
@@ -105,24 +94,21 @@ describe("build image generation", () => {
       ].join(""),
     );
 
-    const count = await generateOgImagesFromHtmlDir(
-      outDir,
-      {
-        ...resolvedOptions,
-        outDir,
-      },
-      async (html, pathname, config) => {
-        writes.push({ html, pathname, stylesheet: config.stylesheet });
-      },
-    );
+    const logger = await runBuildDone(outDir);
     const html = await readFile(htmlPath, "utf8");
 
-    expect(count).toBe(2);
-    expect(writes).toEqual([
-      { html: "<div>One</div>", pathname: "/", stylesheet: ".one{}" },
-      { html: "<div>Two</div>", pathname: "/two/", stylesheet: "" },
-    ]);
+    expect(logger.info).toHaveBeenCalledWith("generated 2 Open Graph images");
     expect(html).toBe("");
+    await assertImage(await readFile(join(outDir, "social", "index.png")), {
+      format: "png",
+      width: 600,
+      height: 315,
+    });
+    await assertImage(await readFile(join(outDir, "social", "two", "index.png")), {
+      format: "png",
+      width: 600,
+      height: 315,
+    });
   });
 
   test("does not create output directories when no templates are present", async () => {
@@ -130,10 +116,7 @@ describe("build image generation", () => {
 
     await mkdir(outDir, { recursive: true });
     await writeFile(join(outDir, "index.html"), "<html>No templates</html>");
-    await generateOgImagesFromHtmlDir(outDir, {
-      ...resolvedOptions,
-      outDir,
-    });
+    await runBuildDone(outDir);
 
     await expect(stat(join(outDir, "social"))).rejects.toThrow();
   });
