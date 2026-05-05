@@ -16,7 +16,7 @@ jobs:
           node-version: "24"
           cache: true
       - run: vp install
-      - run: vp exec playwright install --with-deps chromium
+      - run: vp exec playwright install chromium
       - run: vp run astro-og-seo#build
       - run: vp check
       - run: vp run astro-og-seo#test:unit
