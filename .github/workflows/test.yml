@@ -25,6 +25,7 @@ jobs:
         if: failure()
         with:
           name: test-artifacts
+          include-hidden-files: true
           path: |
             packages/astro-og-seo/test/.artifacts
             packages/astro-og-seo/test/__screenshots__

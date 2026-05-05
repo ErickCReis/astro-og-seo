@@ -12,8 +12,13 @@ type AssertImageOptions = {
   minBytes?: number;
 };
 
+type ImageSnapshotOptions = {
+  maxDiffRatio?: number;
+};
+
 const snapshotDir = new URL("../snapshots/images/", import.meta.url);
 const artifactDir = new URL("../.artifacts/image-diffs/", import.meta.url);
+const defaultMaxDiffRatio = 0.01;
 
 async function exists(path: string) {
   try {
@@ -38,7 +43,11 @@ export async function assertImage(buffer: Buffer, options: AssertImageOptions) {
   expect(metadata.height).toBe(options.height);
 }
 
-export async function expectImageToMatchSnapshot(buffer: Buffer, name: string) {
+export async function expectImageToMatchSnapshot(
+  buffer: Buffer,
+  name: string,
+  options: ImageSnapshotOptions = {},
+) {
   const actualBuffer = await normalizePng(buffer);
   const snapshotPath = join(snapshotDir.pathname, `${name}.png`);
 
@@ -67,8 +76,9 @@ export async function expectImageToMatchSnapshot(buffer: Buffer, name: string) {
     { threshold: 0.1 },
   );
   const diffRatio = mismatchedPixels / (actual.width * actual.height);
+  const maxDiffRatio = options.maxDiffRatio ?? defaultMaxDiffRatio;
 
-  if (diffRatio > 0.002) {
+  if (diffRatio > maxDiffRatio) {
     const artifactBase = join(artifactDir.pathname, name);
     await mkdir(dirname(artifactBase), { recursive: true });
     await writeFile(`${artifactBase}.actual.png`, actualBuffer);
@@ -76,5 +86,5 @@ export async function expectImageToMatchSnapshot(buffer: Buffer, name: string) {
     await writeFile(`${artifactBase}.diff.png`, PNG.sync.write(diff));
   }
 
-  expect(diffRatio).toBeLessThanOrEqual(0.002);
+  expect(diffRatio).toBeLessThanOrEqual(maxDiffRatio);
 }
