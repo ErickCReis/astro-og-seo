@@ -19,8 +19,6 @@ jobs:
         with:
           node-version: "24"
           cache: true
-      - run: vp pack
-        working-directory: packages/astro-og-seo
       - name: Publish astro-og-seo
         working-directory: packages/astro-og-seo
         run: npm publish --provenance --access public
