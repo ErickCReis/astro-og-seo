@@ -1,102 +1,28 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import type { IncomingMessage, ServerResponse } from "node:http";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { AstroConfig, AstroIntegration } from "astro";
-import type { Plugin } from "vite-plus";
-import { renderOgImage, writeOgImage } from "./runtime";
+import type { AstroIntegration } from "astro";
+import { resolveAstroOgSeoOptions } from "./options";
+import { handlePreviewRequest, PREVIEW_ENDPOINT } from "./preview";
+import { writeOgImage } from "./runtime";
+import { createVirtualModulePlugin } from "./virtual-module";
 import type { AstroOgSeoOptions, ResolvedAstroOgSeoOptions } from "./types";
 
-const VIRTUAL_MODULE_ID = "virtual:astro-og-seo";
-const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
-const IMAGE_TEMPLATE_PATTERN =
+const imageTemplatePattern =
   /<template data-astro-og-seo-image data-pathname="([^"]*)"(?: data-stylesheet(?:="([^"]*)")?)?>([\s\S]*?)<\/template>/g;
-const PREVIEW_ENDPOINT = "/__astro-og-seo/preview";
 
 async function collectHtmlFiles(dir: string): Promise<string[]> {
-  const entries = await readdir(dir, { withFileTypes: true });
-  const files: string[] = [];
+  const entries = await readdir(dir, { recursive: true });
 
-  for (const entry of entries) {
-    const path = join(dir, entry.name);
-
-    if (entry.isDirectory()) {
-      files.push(...(await collectHtmlFiles(path)));
-    } else if (entry.isFile() && path.endsWith(".html")) {
-      files.push(path);
-    }
-  }
-
-  return files;
+  return entries.filter((entry) => entry.endsWith(".html")).map((entry) => join(dir, entry));
 }
 
-function normalizeOptions(
-  options: AstroOgSeoOptions,
-  config: AstroConfig,
-): Omit<ResolvedAstroOgSeoOptions, "stylesheet"> {
+function getNodeRenderAliases() {
   return {
-    siteName: options.siteName,
-    outDir: fileURLToPath(config.outDir),
-    outputDir: options.outputDir ?? "_og",
-    image: {
-      width: options.image?.width ?? 1200,
-      height: options.image?.height ?? 630,
-      format: options.image?.format ?? "png",
-    },
+    "@takumi-rs/core": fileURLToPath(
+      new URL("../node_modules/@takumi-rs/core/dist/export.mjs", import.meta.url),
+    ),
   };
-}
-
-function createVirtualModulePlugin(
-  options: AstroOgSeoOptions,
-  resolvedOptions: Omit<ResolvedAstroOgSeoOptions, "stylesheet">,
-): Plugin {
-  return {
-    name: "astro-og-seo:virtual-module",
-    enforce: "pre",
-    resolveId(id) {
-      if (id === VIRTUAL_MODULE_ID) {
-        return RESOLVED_VIRTUAL_MODULE_ID;
-      }
-
-      return null;
-    },
-    load(id) {
-      if (id !== RESOLVED_VIRTUAL_MODULE_ID) {
-        return null;
-      }
-
-      const stylesheetImport = options.stylesheet
-        ? `import stylesheet from ${JSON.stringify(`${options.stylesheet}?inline`)};`
-        : "const stylesheet = '';";
-
-      return [
-        stylesheetImport,
-        "",
-        `export const astroOgSeoConfig = ${JSON.stringify(resolvedOptions)};`,
-        "astroOgSeoConfig.stylesheet = stylesheet;",
-        "",
-      ].join("\n");
-    },
-  };
-}
-
-function readRequestBody(request: IncomingMessage) {
-  return new Promise<string>((resolve, reject) => {
-    let body = "";
-
-    request.setEncoding("utf8");
-    request.on("data", (chunk) => {
-      body += chunk;
-    });
-    request.on("end", () => resolve(body));
-    request.on("error", reject);
-  });
-}
-
-function sendText(response: ServerResponse, statusCode: number, message: string) {
-  response.statusCode = statusCode;
-  response.setHeader("content-type", "text/plain; charset=utf-8");
-  response.end(message);
 }
 
 export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
@@ -106,7 +32,7 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
     name: "astro-og-seo",
     hooks: {
       "astro:config:setup": ({ addDevToolbarApp, config, updateConfig }) => {
-        resolvedOptions = normalizeOptions(options, config);
+        resolvedOptions = resolveAstroOgSeoOptions(options, config);
         addDevToolbarApp({
           id: "astro-og-seo",
           name: "SEO",
@@ -115,6 +41,13 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
         });
         updateConfig({
           vite: {
+            resolve: {
+              alias: getNodeRenderAliases(),
+              conditions: ["node", "import", "default"],
+            },
+            ssr: {
+              noExternal: ["takumi-js", "@takumi-rs/core"],
+            },
             plugins: [createVirtualModulePlugin(options, resolvedOptions)],
           },
         });
@@ -132,47 +65,7 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
       },
       "astro:server:setup": ({ server }) => {
         server.middlewares.use(PREVIEW_ENDPOINT, async (request, response) => {
-          if (request.method !== "POST") {
-            sendText(response, 405, "Method not allowed");
-            return;
-          }
-
-          if (!resolvedOptions) {
-            sendText(response, 500, "astro-og-seo is not configured");
-            return;
-          }
-
-          try {
-            const payload = JSON.parse(await readRequestBody(request)) as {
-              html?: unknown;
-              stylesheet?: unknown;
-            };
-
-            if (typeof payload.html !== "string") {
-              sendText(response, 400, "Missing OG image HTML");
-              return;
-            }
-
-            const stylesheet =
-              typeof payload.stylesheet === "string"
-                ? Buffer.from(payload.stylesheet, "base64").toString("utf8")
-                : "";
-            const config = {
-              ...resolvedOptions,
-              stylesheet,
-            };
-            const image = await renderOgImage(payload.html, config);
-
-            response.statusCode = 200;
-            response.setHeader("content-type", `image/${config.image.format}`);
-            response.end(image);
-          } catch (error) {
-            sendText(
-              response,
-              500,
-              error instanceof Error ? error.message : "Unable to render OG image",
-            );
-          }
+          await handlePreviewRequest(request, response, resolvedOptions);
         });
       },
       "astro:build:done": async ({ dir, logger }) => {
@@ -185,7 +78,7 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
 
         for (const file of htmlFiles) {
           const html = await readFile(file, "utf8");
-          const matches = [...html.matchAll(IMAGE_TEMPLATE_PATTERN)];
+          const matches = [...html.matchAll(imageTemplatePattern)];
 
           if (matches.length === 0) {
             continue;
@@ -202,7 +95,7 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
             generatedCount += 1;
           }
 
-          await writeFile(file, html.replace(IMAGE_TEMPLATE_PATTERN, ""));
+          await writeFile(file, html.replace(imageTemplatePattern, ""));
         }
 
         logger.info(

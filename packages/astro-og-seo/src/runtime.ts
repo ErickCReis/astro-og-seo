@@ -14,8 +14,9 @@ function getPathSegments(pathname: string) {
 export function getOgImagePathname(pathname: string, config: ResolvedAstroOgSeoOptions): string {
   const outputDir = config.outputDir.replace(/^\/+|\/+$/g, "");
   const segments = getPathSegments(pathname);
+  const parts = [outputDir, ...segments, `index.${config.image.format}`].filter(Boolean);
 
-  return `/${[outputDir, ...segments, `index.${config.image.format}`].join("/")}`;
+  return `/${parts.join("/")}`;
 }
 
 function getOutputPath(pathname: string, config: ResolvedAstroOgSeoOptions) {

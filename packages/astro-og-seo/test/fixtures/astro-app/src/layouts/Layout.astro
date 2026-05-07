@@ -1,0 +1,39 @@
+---
+import OgSeo from "../../../../../src/components/OgSeo.astro";
+
+interface Props {
+  title: string;
+  description?: string;
+  canonical?: string;
+  article?: {
+    publishedTime: Date;
+    modifiedTime?: Date;
+  };
+}
+
+const { title, description, canonical, article } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <OgSeo
+      title={title}
+      description={description}
+      canonical={canonical}
+      alternates={[{ href: "https://example.test/pt/", hrefLang: "pt-BR" }]}
+      article={article}
+    >
+      <Fragment slot="image">
+        <div class="og-image">
+          <p>Fixture Site</p>
+          <h1>{title}</h1>
+          <span>{description}</span>
+        </div>
+      </Fragment>
+    </OgSeo>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

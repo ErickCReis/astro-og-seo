@@ -1,0 +1,35 @@
+name: Test
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "24"
+          cache: true
+      - run: vp install
+      - run: vp exec playwright install chromium
+      - run: vp run astro-og-seo#build
+      - run: vp check
+      - run: vp run astro-og-seo#test:unit
+      - run: vp run astro-og-seo#test:integration
+      - run: vp run astro-og-seo#test:browser
+      - run: vp run astro-og-seo#test:e2e
+      - run: vp run -r build
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: test-artifacts
+          include-hidden-files: true
+          path: |
+            packages/astro-og-seo/test/.artifacts
+            packages/astro-og-seo/test/__screenshots__
+            packages/astro-og-seo/coverage
