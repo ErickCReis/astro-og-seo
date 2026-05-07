@@ -1,20 +1,8 @@
 import { describe, expect, test } from "vite-plus/test";
 import { getOgImagePathname } from "../../src/runtime";
-import type { ResolvedAstroOgSeoOptions } from "../../src/types";
+import { createResolvedConfig } from "../helpers/config";
 
-function config(format: ResolvedAstroOgSeoOptions["image"]["format"] = "png") {
-  return {
-    siteName: "Test",
-    stylesheet: "",
-    outDir: "/tmp/dist",
-    outputDir: "_og",
-    image: {
-      width: 1200,
-      height: 630,
-      format,
-    },
-  } satisfies ResolvedAstroOgSeoOptions;
-}
+const config = createResolvedConfig;
 
 describe("getOgImagePathname", () => {
   test("creates a root image pathname", () => {
@@ -47,7 +35,15 @@ describe("getOgImagePathname", () => {
   });
 
   test("uses the configured image format", () => {
-    expect(getOgImagePathname("/post", config("jpeg"))).toBe("/_og/post/index.jpeg");
-    expect(getOgImagePathname("/post", config("webp"))).toBe("/_og/post/index.webp");
+    expect(getOgImagePathname("/post", config({ format: "jpeg" }))).toBe("/_og/post/index.jpeg");
+    expect(getOgImagePathname("/post", config({ format: "webp" }))).toBe("/_og/post/index.webp");
+  });
+
+  test("handles an empty pathname", () => {
+    expect(getOgImagePathname("", config())).toBe("/_og/index.png");
+  });
+
+  test("handles pathnames without leading slash", () => {
+    expect(getOgImagePathname("about", config())).toBe("/_og/about/index.png");
   });
 });

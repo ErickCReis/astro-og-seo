@@ -1,9 +1,10 @@
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import pixelmatch from "pixelmatch";
 import { PNG } from "pngjs";
 import sharp from "sharp";
 import { expect } from "vite-plus/test";
+import { exists } from "./paths";
 
 type AssertImageOptions = {
   format: "png" | "jpeg" | "webp";
@@ -19,15 +20,6 @@ type ImageSnapshotOptions = {
 const snapshotDir = new URL("../snapshots/images/", import.meta.url);
 const artifactDir = new URL("../.artifacts/image-diffs/", import.meta.url);
 const defaultMaxDiffRatio = 0.01;
-
-async function exists(path: string) {
-  try {
-    await stat(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
 
 async function normalizePng(buffer: Buffer) {
   return sharp(buffer).png().toBuffer();

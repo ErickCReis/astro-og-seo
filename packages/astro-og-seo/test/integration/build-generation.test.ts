@@ -111,6 +111,27 @@ describe("Astro build image generation", () => {
     });
   });
 
+  test("handles templates without a stylesheet attribute", async () => {
+    const outDir = join(tempDir, "dist");
+
+    await mkdir(outDir, { recursive: true });
+    await writeFile(
+      join(outDir, "index.html"),
+      '<template data-astro-og-seo-image data-pathname="/"><div>No styles</div></template>',
+    );
+
+    const logger = await runBuildDone(outDir);
+    const html = await readFile(join(outDir, "index.html"), "utf8");
+
+    expect(logger.info).toHaveBeenCalledWith("generated 1 Open Graph image");
+    expect(html).toBe("");
+    await assertImage(await readFile(join(outDir, "social", "index.png")), {
+      format: "png",
+      width: 600,
+      height: 315,
+    });
+  });
+
   test("does not create output directories when no templates are present", async () => {
     const outDir = join(tempDir, "dist");
 

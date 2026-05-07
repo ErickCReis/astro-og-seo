@@ -88,4 +88,11 @@ describe("preview endpoint", () => {
     expect(response.headers["content-type"]).toBe("image/png");
     await assertImage(response.body, { format: "png", width: 600, height: 315 });
   });
+
+  test("renders with an empty HTML string", async () => {
+    const response = await callPreview("POST", JSON.stringify({ html: "" }));
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body.toString()).toBe("Missing OG image HTML");
+  });
 });

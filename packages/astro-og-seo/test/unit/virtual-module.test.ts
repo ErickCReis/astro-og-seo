@@ -4,17 +4,9 @@ import {
   RESOLVED_VIRTUAL_MODULE_ID,
   VIRTUAL_MODULE_ID,
 } from "../../src/virtual-module";
+import { createResolvedConfig } from "../helpers/config";
 
-const resolvedOptions = {
-  siteName: "Site",
-  outDir: "/tmp/dist",
-  outputDir: "_og",
-  image: {
-    width: 1200,
-    height: 630,
-    format: "png" as const,
-  },
-};
+const resolvedOptions = createResolvedConfig();
 
 describe("createVirtualModulePlugin", () => {
   test("resolves the virtual module id", () => {
@@ -23,6 +15,13 @@ describe("createVirtualModulePlugin", () => {
 
     expect(resolveId(VIRTUAL_MODULE_ID)).toBe(RESOLVED_VIRTUAL_MODULE_ID);
     expect(resolveId("other")).toBeNull();
+  });
+
+  test("returns null when loading a non-matching id", () => {
+    const plugin = createVirtualModulePlugin({ siteName: "Site" }, resolvedOptions);
+    const load = plugin.load as (id: string) => string | null;
+
+    expect(load("some-other-module")).toBeNull();
   });
 
   test("loads a module without a stylesheet", () => {
@@ -44,5 +43,15 @@ describe("createVirtualModulePlugin", () => {
     const code = load(RESOLVED_VIRTUAL_MODULE_ID);
 
     expect(code).toContain('import stylesheet from "./src/og.css?inline";');
+  });
+
+  test("serializes resolved options into the generated module", () => {
+    const custom = createResolvedConfig({ siteName: "My Blog", outputDir: "social" });
+    const plugin = createVirtualModulePlugin({ siteName: "My Blog" }, custom);
+    const load = plugin.load as (id: string) => string | null;
+    const code = load(RESOLVED_VIRTUAL_MODULE_ID)!;
+
+    expect(code).toContain('"siteName":"My Blog"');
+    expect(code).toContain('"outputDir":"social"');
   });
 });

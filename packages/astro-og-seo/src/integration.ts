@@ -12,20 +12,9 @@ const imageTemplatePattern =
   /<template data-astro-og-seo-image data-pathname="([^"]*)"(?: data-stylesheet(?:="([^"]*)")?)?>([\s\S]*?)<\/template>/g;
 
 async function collectHtmlFiles(dir: string): Promise<string[]> {
-  const entries = await readdir(dir, { withFileTypes: true });
-  const files: string[] = [];
+  const entries = await readdir(dir, { recursive: true });
 
-  for (const entry of entries) {
-    const path = join(dir, entry.name);
-
-    if (entry.isDirectory()) {
-      files.push(...(await collectHtmlFiles(path)));
-    } else if (entry.isFile() && path.endsWith(".html")) {
-      files.push(path);
-    }
-  }
-
-  return files;
+  return entries.filter((entry) => entry.endsWith(".html")).map((entry) => join(dir, entry));
 }
 
 function getNodeRenderAliases() {

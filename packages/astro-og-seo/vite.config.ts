@@ -52,11 +52,7 @@ export default defineConfig({
     },
     projects: [
       {
-        plugins: [solid()],
-        resolve: {
-          alias: nodeAliases,
-          conditions: ["node", "import", "default"],
-        },
+        extends: true,
         test: {
           name: "unit",
           environment: "node",
@@ -64,11 +60,7 @@ export default defineConfig({
         },
       },
       {
-        plugins: [solid()],
-        resolve: {
-          alias: nodeAliases,
-          conditions: ["node", "import", "default"],
-        },
+        extends: true,
         test: {
           name: "integration",
           environment: "node",
@@ -96,11 +88,7 @@ export default defineConfig({
         },
       },
       {
-        plugins: [solid()],
-        resolve: {
-          alias: nodeAliases,
-          conditions: ["node", "import", "default"],
-        },
+        extends: true,
         test: {
           name: "e2e",
           environment: "node",

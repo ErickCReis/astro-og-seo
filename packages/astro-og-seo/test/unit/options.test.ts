@@ -42,4 +42,22 @@ describe("resolveAstroOgSeoOptions", () => {
       },
     });
   });
+
+  test("merges partial image overrides with defaults", () => {
+    const result = resolveAstroOgSeoOptions(
+      { siteName: "Site", image: { format: "jpeg" } },
+      astroConfig(),
+    );
+
+    expect(result.image).toEqual({ width: 1200, height: 630, format: "jpeg" });
+  });
+
+  test("resolves outDir from AstroConfig URL", () => {
+    const result = resolveAstroOgSeoOptions(
+      { siteName: "Site" },
+      astroConfig(new URL("file:///home/user/project/build/")),
+    );
+
+    expect(result.outDir).toBe("/home/user/project/build/");
+  });
 });

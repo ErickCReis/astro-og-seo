@@ -39,6 +39,17 @@ describe("toolbar app helpers", () => {
     );
   });
 
+  test("returns null values for missing meta tags", () => {
+    document.title = "";
+
+    const fields = readSeoFields();
+    const description = fields.find((f) => f.label === "Description");
+    const ogImage = fields.find((f) => f.label === "OG image");
+
+    expect(description?.value).toBeNull();
+    expect(ogImage?.value).toBeNull();
+  });
+
   test("finds the OG image template", () => {
     document.head.innerHTML = `<template data-astro-og-seo-image><div>Image</div></template>`;
 
@@ -86,6 +97,30 @@ describe("toolbar app helpers", () => {
     });
   });
 
+  test("sets loading state before fetching", async () => {
+    const template = document.createElement("template");
+    template.innerHTML = "<div>Image</div>";
+    const setPreview = vi.fn();
+    const blob = new Blob(["image"], { type: "image/png" });
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(blob, { status: 200 })),
+    );
+    vi.stubGlobal("URL", {
+      createObjectURL: vi.fn(() => "blob:test"),
+      revokeObjectURL: vi.fn(),
+    });
+
+    await renderPreview(template, setPreview);
+
+    expect(setPreview).toHaveBeenNthCalledWith(1, {
+      status: "loading",
+      message: "Rendering preview...",
+      src: null,
+    });
+  });
+
   test("captures preview errors", async () => {
     const template = document.createElement("template");
     const setPreview = vi.fn();
@@ -101,6 +136,27 @@ describe("toolbar app helpers", () => {
     expect(setPreview).toHaveBeenLastCalledWith({
       status: "error",
       message: "Render failed",
+      src: null,
+    });
+  });
+
+  test("handles non-Error thrown values gracefully", async () => {
+    const template = document.createElement("template");
+    template.innerHTML = "<div>Image</div>";
+    const setPreview = vi.fn();
+
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        throw "network failure";
+      }),
+    );
+
+    await renderPreview(template, setPreview);
+
+    expect(setPreview).toHaveBeenLastCalledWith({
+      status: "error",
+      message: "Unable to render preview.",
       src: null,
     });
   });

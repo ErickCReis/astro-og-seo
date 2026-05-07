@@ -44,7 +44,7 @@ export async function handlePreviewRequest(
       stylesheet?: unknown;
     };
 
-    if (typeof payload.html !== "string") {
+    if (typeof payload.html !== "string" || payload.html.length === 0) {
       sendText(response, 400, "Missing OG image HTML");
       return;
     }
