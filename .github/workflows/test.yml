@@ -2,6 +2,8 @@ name: Test
 
 on:
   pull_request:
+  push:
+    branches: [main]
 
 permissions:
   contents: read
@@ -32,4 +34,3 @@ jobs:
           path: |
             packages/astro-og-seo/test/.artifacts
             packages/astro-og-seo/test/__screenshots__
-            packages/astro-og-seo/coverage

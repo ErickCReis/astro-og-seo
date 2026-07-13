@@ -10,9 +10,9 @@ export default defineConfig({
   integrations: [
     astroOgSeo({
       siteName: "Astro OG SEO Example",
-      stylesheet: "./src/layouts/og-image.css",
-      outputDir: "_og",
       image: {
+        stylesheet: "./src/layouts/og-image.css",
+        outputDir: "_og",
         width: 1200,
         height: 630,
         format: "png",

@@ -20,7 +20,7 @@ describe("toolbar app browser rendering", () => {
       <meta property="og:image" content="https://example.test/_og/browser/index.png">
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:image" content="https://example.test/_og/browser/index.png">
-      <template data-astro-og-seo-image data-stylesheet="${btoa(".card{}")}"><div class="card">Browser</div></template>
+      <template data-astro-og-seo-image="${btoa(JSON.stringify({ pathname: "/browser/", html: '<div class="card">Browser</div>', stylesheet: ".card{}" }))}"></template>
     `;
     const host = document.body.appendChild(document.createElement("div"));
     const canvas = host.attachShadow({ mode: "open" });
@@ -42,8 +42,8 @@ describe("toolbar app browser rendering", () => {
     );
 
     await vi.waitFor(() => {
-      expect(canvas.textContent).toContain("Astro OG SEO");
-      expect(canvas.textContent).toContain("Browser OG title");
+      expect(canvas.textContent).toContain("SEO signal");
+      expect(canvas.textContent).toContain("Open Graph title is set");
     });
 
     const window = canvas.querySelector("astro-dev-toolbar-window");
@@ -51,7 +51,9 @@ describe("toolbar app browser rendering", () => {
     expect(window).toBeTruthy();
 
     await vi.waitFor(() => {
-      expect(page.getByAltText("Open Graph image preview", { exact: true }).element()).toBeTruthy();
+      expect(
+        page.getByAltText("Generated Open Graph preview", { exact: true }).element(),
+      ).toBeTruthy();
     });
 
     await page.screenshot({ path: "toolbar-app-page.png", save: true });

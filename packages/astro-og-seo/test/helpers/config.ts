@@ -1,19 +1,26 @@
 import type { AstroOgSeoImageFormat, ResolvedAstroOgSeoOptions } from "../../src/types";
 
-export function createResolvedConfig(
-  overrides: Partial<ResolvedAstroOgSeoOptions> & {
-    format?: AstroOgSeoImageFormat;
-  } = {},
-): ResolvedAstroOgSeoOptions {
-  const { format, image, ...rest } = overrides;
+export type ResolvedImageConfig = ResolvedAstroOgSeoOptions & {
+  image: Exclude<ResolvedAstroOgSeoOptions["image"], false>;
+};
 
+export function createResolvedConfig(
+  overrides: Partial<Omit<ResolvedAstroOgSeoOptions, "image">> & {
+    format?: AstroOgSeoImageFormat;
+    image?: Partial<ResolvedImageConfig["image"]>;
+  } = {},
+): ResolvedImageConfig {
+  const { format, image, ...rest } = overrides;
   return {
     siteName: "Test",
-    stylesheet: "",
+    site: "https://example.test",
     outDir: "/tmp/dist",
-    outputDir: "_og",
+    buildOutput: "static",
+    toolbarEnabled: true,
     ...rest,
     image: {
+      stylesheet: "",
+      outputDir: "_og",
       width: 1200,
       height: 630,
       format: format ?? "png",

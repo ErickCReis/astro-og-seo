@@ -2,9 +2,7 @@ name: Publish
 
 on:
   push:
-    branches: [main]
-    paths:
-      - packages/astro-og-seo/package.json
+    tags: ["v*"]
 
 permissions:
   contents: read
@@ -19,6 +17,14 @@ jobs:
         with:
           node-version: "24"
           cache: true
-      - name: Publish astro-og-seo
+      - run: vp install
+      - run: vp exec playwright install chromium
+      - name: Verify tag matches package version
+        run: test "${GITHUB_REF_NAME}" = "v$(node -p "require('./packages/astro-og-seo/package.json').version")"
+      - run: vp run ready
+      - name: Inspect package
+        working-directory: packages/astro-og-seo
+        run: npm pack --dry-run --json
+      - name: Publish with provenance
         working-directory: packages/astro-og-seo
         run: npm publish --provenance --access public

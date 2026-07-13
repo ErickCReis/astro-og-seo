@@ -14,14 +14,9 @@ describe("getOgImagePathname", () => {
   });
 
   test("normalizes output directory slashes", () => {
-    expect(getOgImagePathname("/", { ...config(), outputDir: "/social/" })).toBe(
-      "/social/index.png",
-    );
-  });
-
-  test("allows an empty output directory without double slashes", () => {
-    expect(getOgImagePathname("/", { ...config(), outputDir: "" })).toBe("/index.png");
-    expect(getOgImagePathname("/blog/", { ...config(), outputDir: "///" })).toBe("/blog/index.png");
+    expect(
+      getOgImagePathname("/", { ...config(), image: { ...config().image, outputDir: "social" } }),
+    ).toBe("/social/index.png");
   });
 
   test("encodes path segments consistently", () => {

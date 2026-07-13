@@ -9,10 +9,12 @@ export type CapturedResponse = {
 export function createRequest(method: string, body = "") {
   const request = new EventEmitter() as EventEmitter & {
     method: string;
+    headers: Record<string, string>;
     setEncoding: () => void;
   };
 
   request.method = method;
+  request.headers = {};
   request.setEncoding = () => {};
 
   queueMicrotask(() => {

@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vite-plus/test";
 import { astroOgSeo } from "../../src/integration";
+import { encodeImageMarker } from "../../src/image/marker";
 import { assertImage, expectImageToMatchSnapshot } from "../helpers/image";
 import { createTempDir, removeTempDir } from "../helpers/paths";
 
@@ -20,8 +21,8 @@ async function runBuildDone(outDir: string) {
   const logger = { info: vi.fn() };
   const integration = astroOgSeo({
     siteName: "Site",
-    outputDir: "social",
     image: {
+      outputDir: "social",
       width: 600,
       height: 315,
       format: "png",
@@ -30,7 +31,7 @@ async function runBuildDone(outDir: string) {
 
   await integration.hooks["astro:config:setup"]?.({
     addDevToolbarApp: vi.fn(),
-    config: { outDir: pathToFileURL(`${outDir}/`) },
+    config: { outDir: pathToFileURL(`${outDir}/`), site: new URL("https://example.test") },
     updateConfig: vi.fn(),
   } as never);
   await integration.hooks["astro:build:done"]?.({
@@ -45,14 +46,10 @@ describe("Astro build image generation", () => {
   test("generates images from nested HTML files", async () => {
     const htmlDir = join(tempDir, "dist", "blog", "post");
     const outDir = join(tempDir, "dist");
-    const stylesheet = Buffer.from(
-      ".card{width:600px;height:315px;background:#be123c;color:white;display:flex;align-items:center;justify-content:center;font:700 44px Arial;}",
-    ).toString("base64");
-
     await mkdir(htmlDir, { recursive: true });
     await writeFile(
       join(htmlDir, "index.html"),
-      `<html><head><template data-astro-og-seo-image data-pathname="/blog/post/" data-stylesheet="${stylesheet}"><div class="card">Build</div></template></head><body>Post</body></html>`,
+      `<html><head><template data-astro-og-seo-image="${encodeImageMarker({ pathname: "/blog/post/", html: '<div class="card">Build</div>', stylesheet: ".card{}" })}"></template></head><body>Post</body></html>`,
     );
 
     const logger = await runBuildDone(outDir);
@@ -81,17 +78,15 @@ describe("Astro build image generation", () => {
   test("supports multiple templates in one HTML file", async () => {
     const outDir = join(tempDir, "dist");
     const htmlPath = join(outDir, "index.html");
-    const stylesheet = Buffer.from(".one{}").toString("base64");
-
     await mkdir(outDir, { recursive: true });
     await writeFile(
       htmlPath,
-      [
-        '<template data-astro-og-seo-image data-pathname="/" data-stylesheet="',
-        stylesheet,
-        '"><div>One</div></template>',
-        '<template data-astro-og-seo-image data-pathname="/two/"><div>Two</div></template>',
-      ].join(""),
+      ["/", "/two/"]
+        .map(
+          (pathname) =>
+            `<template data-astro-og-seo-image="${encodeImageMarker({ pathname, html: `<div>${pathname}</div>`, stylesheet: "" })}"></template>`,
+        )
+        .join(""),
     );
 
     const logger = await runBuildDone(outDir);
@@ -117,7 +112,7 @@ describe("Astro build image generation", () => {
     await mkdir(outDir, { recursive: true });
     await writeFile(
       join(outDir, "index.html"),
-      '<template data-astro-og-seo-image data-pathname="/"><div>No styles</div></template>',
+      `<template data-astro-og-seo-image="${encodeImageMarker({ pathname: "/", html: "<div>No styles</div>", stylesheet: "" })}"></template>`,
     );
 
     const logger = await runBuildDone(outDir);

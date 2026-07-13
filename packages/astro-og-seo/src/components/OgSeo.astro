@@ -1,122 +1,97 @@
 ---
 import { astroOgSeoConfig } from "virtual:astro-og-seo";
 import { getOgImagePathname } from "astro-og-seo";
-
-interface OgSeoAlternate {
-  href: string;
-  hrefLang: string;
-}
-
-interface OgSeoArticle {
-  publishedTime: Date;
-  modifiedTime?: Date;
-}
-
-interface OgSeoProps {
-  title: string;
-  description?: string;
-  lang?: string;
-  canonical?: string | URL;
-  alternates?: OgSeoAlternate[];
-  article?: OgSeoArticle;
-}
+import type { OgSeoProps } from "astro-og-seo";
 
 export interface Props extends OgSeoProps {}
 
 const {
   title,
   description,
-  lang = "en-US",
   canonical,
+  lang = "en-US",
+  robots = "index,follow",
   alternates = [],
+  alternateLocales = [],
+  type,
+  image,
+  generatedImageAlt,
   article,
+  twitter = {},
 } = Astro.props;
+const pathname = Astro.url.pathname;
+const canonicalUrl = new URL(canonical?.toString() ?? pathname, astroOgSeoConfig.site).toString();
+const hasGeneratedImage = Astro.slots.has("image");
 
-const canonicalUrl = new URL(
-  canonical?.toString() ?? Astro.url.pathname,
-  Astro.site,
-).toString();
-const imagePathname = getOgImagePathname(Astro.url.pathname, astroOgSeoConfig);
-const imageUrl = new URL(imagePathname, Astro.site).toString();
-const imageAlt = description ? `${title} - ${description}` : title;
-const publishedTime = article?.publishedTime.toISOString();
-const modifiedTime = article?.modifiedTime?.toISOString() ?? publishedTime;
-const hasCustomImage = Astro.slots.has("image");
-const encodedStylesheet = Buffer.from(
-  astroOgSeoConfig.stylesheet,
-  "utf8",
-).toString("base64");
+if (hasGeneratedImage && image) {
+  throw new Error(`astro-og-seo: ${pathname} cannot use both an external image and the image slot`);
+}
+if (hasGeneratedImage && astroOgSeoConfig.image === false) {
+  throw new Error(`astro-og-seo: ${pathname} uses an image slot but generated images are disabled`);
+}
+if (hasGeneratedImage && astroOgSeoConfig.buildOutput === "server") {
+  throw new Error(`astro-og-seo: generated images are unavailable for server output (${pathname})`);
+}
+
+function toIsoDate(value: Date | string | undefined, name: string) {
+  if (value === undefined) return undefined;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) throw new Error(`astro-og-seo: invalid ${name} on ${pathname}`);
+  return date.toISOString();
+}
+
+const publishedTime = toIsoDate(article?.publishedTime, "article.publishedTime");
+const modifiedTime = toIsoDate(article?.modifiedTime, "article.modifiedTime");
+const pageType = type ?? (article ? "article" : "website");
+const generatedUrl = hasGeneratedImage && astroOgSeoConfig.image
+  ? new URL(getOgImagePathname(pathname, astroOgSeoConfig as never), astroOgSeoConfig.site).toString()
+  : undefined;
+const imageUrl = image ? new URL(image.url.toString(), astroOgSeoConfig.site).toString() : generatedUrl;
+const imageAlt = image?.alt ?? generatedImageAlt ?? title;
+const imageWidth = image?.width ?? (hasGeneratedImage && astroOgSeoConfig.image ? astroOgSeoConfig.image.width : undefined);
+const imageHeight = image?.height ?? (hasGeneratedImage && astroOgSeoConfig.image ? astroOgSeoConfig.image.height : undefined);
+const imageType = image?.type ?? (hasGeneratedImage && astroOgSeoConfig.image
+  ? astroOgSeoConfig.image.format === "jpeg" ? "image/jpeg" : `image/${astroOgSeoConfig.image.format}`
+  : undefined);
+const twitterCard = twitter.card ?? (imageUrl ? "summary_large_image" : "summary");
+if (twitterCard === "summary_large_image" && !imageUrl) {
+  throw new Error(`astro-og-seo: ${pathname} uses summary_large_image without an image`);
+}
+const renderedImage = hasGeneratedImage ? await Astro.slots.render("image") : undefined;
+const marker = renderedImage
+  ? Buffer.from(JSON.stringify({ pathname, html: renderedImage, stylesheet: astroOgSeoConfig.image && astroOgSeoConfig.image.stylesheet }), "utf8").toString("base64")
+  : undefined;
 ---
 
 <Fragment>
   <title>{title}</title>
   {description && <meta name="description" content={description} />}
+  <meta name="robots" content={robots} />
   <link rel="canonical" href={canonicalUrl} />
-  {
-    alternates.map((alternate) => (
-      <link
-        rel="alternate"
-        hreflang={alternate.hrefLang}
-        href={alternate.href}
-      />
-    ))
-  }
-  <meta property="og:type" content={article ? "article" : "website"} />
+  {alternates.map(({ href, hreflang }) => <link rel="alternate" hreflang={hreflang} href={new URL(href.toString(), astroOgSeoConfig.site)} />)}
+  <meta property="og:type" content={pageType} />
   <meta property="og:title" content={title} />
   {description && <meta property="og:description" content={description} />}
   <meta property="og:url" content={canonicalUrl} />
   <meta property="og:site_name" content={astroOgSeoConfig.siteName} />
   <meta property="og:locale" content={lang.replace("-", "_")} />
-  {
-    hasCustomImage && (
-      <Fragment>
-        <meta property="og:image" content={imageUrl} />
-        <meta
-          property="og:image:width"
-          content={String(astroOgSeoConfig.image.width)}
-        />
-        <meta
-          property="og:image:height"
-          content={String(astroOgSeoConfig.image.height)}
-        />
-        <meta
-          property="og:image:type"
-          content={`image/${astroOgSeoConfig.image.format}`}
-        />
-        <meta property="og:image:alt" content={imageAlt} />
-      </Fragment>
-    )
-  }
-  <meta name="twitter:card" content="summary_large_image" />
+  {alternateLocales.map((locale) => <meta property="og:locale:alternate" content={locale.replace("-", "_")} />)}
+  {imageUrl && <meta property="og:image" content={imageUrl} />}
+  {imageUrl && imageWidth && <meta property="og:image:width" content={String(imageWidth)} />}
+  {imageUrl && imageHeight && <meta property="og:image:height" content={String(imageHeight)} />}
+  {imageUrl && imageType && <meta property="og:image:type" content={imageType} />}
+  {imageUrl && <meta property="og:image:alt" content={imageAlt} />}
+  <meta name="twitter:card" content={twitterCard} />
   <meta name="twitter:title" content={title} />
   {description && <meta name="twitter:description" content={description} />}
-  {
-    hasCustomImage && (
-      <Fragment>
-        <meta name="twitter:image" content={imageUrl} />
-        <meta name="twitter:image:alt" content={imageAlt} />
-      </Fragment>
-    )
-  }
-  {
-    publishedTime && (
-      <meta property="article:published_time" content={publishedTime} />
-    )
-  }
-  {
-    modifiedTime && (
-      <meta property="article:modified_time" content={modifiedTime} />
-    )
-  }
-  {
-    hasCustomImage && (
-      <template
-        data-astro-og-seo-image
-        data-pathname={Astro.url.pathname}
-        data-stylesheet={encodedStylesheet}
-      >
-        <slot name="image" />
-      </template>
-    )
-  }
+  {twitter.site && <meta name="twitter:site" content={twitter.site} />}
+  {twitter.creator && <meta name="twitter:creator" content={twitter.creator} />}
+  {imageUrl && <meta name="twitter:image" content={imageUrl} />}
+  {imageUrl && <meta name="twitter:image:alt" content={imageAlt} />}
+  {publishedTime && <meta property="article:published_time" content={publishedTime} />}
+  {modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
+  {article?.authors?.map((author) => <meta property="article:author" content={author} />)}
+  {article?.section && <meta property="article:section" content={article.section} />}
+  {article?.tags?.map((tag) => <meta property="article:tag" content={tag} />)}
+  {marker && <template data-astro-og-seo-image={marker}></template>}
 </Fragment>

@@ -1,3 +1,15 @@
-export { astroOgSeo } from "./integration";
-export { getOgImagePathname } from "./runtime";
-export type { AstroOgSeoImageFormat, AstroOgSeoOptions, ResolvedAstroOgSeoOptions } from "./types";
+import { astroOgSeo } from "./integration";
+
+export default astroOgSeo;
+export { astroOgSeo };
+export { getOgImagePathname } from "./image/paths";
+export type {
+  AstroOgSeoImageFormat,
+  AstroOgSeoImageOptions,
+  AstroOgSeoOptions,
+  OgSeoAlternate,
+  OgSeoArticle,
+  OgSeoExternalImage,
+  OgSeoProps,
+  OgSeoTwitter,
+} from "./seo/types";

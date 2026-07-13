@@ -1,7 +1,15 @@
 {
   "name": "astro-og-seo",
-  "version": "0.0.2",
-  "description": "Astro Open Graph SEO",
+  "version": "0.1.0",
+  "description": "SEO metadata, Open Graph images, and a dev-toolbar inspector for Astro",
+  "keywords": [
+    "astro-component",
+    "astro-integration",
+    "dev-toolbar",
+    "image",
+    "open-graph",
+    "seo"
+  ],
   "homepage": "https://github.com/ErickCReis/astro-og-seo#readme",
   "bugs": {
     "url": "https://github.com/ErickCReis/astro-og-seo/issues"
@@ -33,7 +41,7 @@
     "test:integration": "vp pack && vp test run --project integration",
     "test:browser": "vp test run --project browser",
     "test:e2e": "vp pack && vp test run --project e2e",
-    "test:coverage": "vp test run --coverage --project unit --project integration",
+    "test:package": "vp pack && npm pack --dry-run --json",
     "test:update": "vp test run --update",
     "test:all": "vp run test:unit && vp run test:integration && vp run test:browser && vp run test:e2e",
     "check": "vp check",
@@ -45,18 +53,18 @@
     "takumi-js": "^1.1.2"
   },
   "devDependencies": {
-    "@bosh-code/tsdown-plugin-tailwindcss": "^1.0.1",
-    "@tailwindcss/vite": "^4.2.4",
     "@tsdown/css": "^0.21.10",
     "@types/node": "24",
-    "astro": "^6.1.9",
+    "astro": "7.0.7",
     "bumpp": "^11.0.1",
-    "tailwindcss": "^4.2.4",
     "typescript": "^6.0.2",
     "vite-plugin-solid": "^2.11.12",
-    "vite-plus": "^0.1.14"
+    "vite-plus": "^0.2.4"
   },
   "peerDependencies": {
-    "astro": "^6.1.9"
+    "astro": "^6.4.6 || ^7.0.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

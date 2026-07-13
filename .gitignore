@@ -30,5 +30,8 @@ dist-ssr
 coverage
 packages/astro-og-seo/test/.tmp
 packages/astro-og-seo/test/.artifacts
+packages/astro-og-seo/.vitest-attachments
+packages/astro-og-seo/test/__screenshots__
+packages/astro-og-seo/test/browser/*.png
 packages/astro-og-seo/test-results
 packages/astro-og-seo/playwright-report

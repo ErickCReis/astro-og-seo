@@ -1,21 +1,15 @@
 import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
 import solid from "vite-plugin-solid";
-import { tailwindPlugin } from "@bosh-code/tsdown-plugin-tailwindcss";
 
-import { defineConfig } from "vite-plus";
 import { playwright } from "vite-plus/test/browser-playwright";
 
 const require = createRequire(import.meta.url);
-const takumiCoreEntry = fileURLToPath(
-  new URL("./node_modules/@takumi-rs/core/dist/export.mjs", import.meta.url),
-);
 const nodeAliases = {
-  "@takumi-rs/core": takumiCoreEntry,
+  "@takumi-rs/core": require.resolve("@takumi-rs/core"),
   "decode-named-character-reference": require.resolve("decode-named-character-reference"),
-};
+} as unknown;
 
-export default defineConfig({
+const config: Record<string, unknown> = {
   plugins: [solid()],
   resolve: {
     alias: nodeAliases,
@@ -27,7 +21,7 @@ export default defineConfig({
   pack: {
     entry: ["src/index.ts", "src/toolbar-app.tsx"],
     copy: ["src/components"],
-    plugins: [solid(), tailwindPlugin()],
+    plugins: [solid()],
     dts: {
       tsgo: true,
     },
@@ -45,11 +39,6 @@ export default defineConfig({
     },
   },
   test: {
-    coverage: {
-      provider: "v8",
-      include: ["src/**/*.{ts,tsx}"],
-      reporter: ["text", "html", "lcov"],
-    },
     projects: [
       {
         extends: true,
@@ -100,4 +89,6 @@ export default defineConfig({
     ],
   },
   fmt: {},
-});
+};
+
+export default config;

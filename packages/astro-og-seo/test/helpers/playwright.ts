@@ -1,5 +1,6 @@
 import { spawn, type ChildProcess } from "node:child_process";
 import { once } from "node:events";
+import { fileURLToPath } from "node:url";
 
 export function getVpBin() {
   return process.env.VP_BIN ?? process.env.VP ?? "vp";
@@ -55,17 +56,19 @@ export async function stopProcess(child: ChildProcess | undefined) {
 
 export function startExampleDevServer(port: number) {
   return spawn(
-    getVpBin(),
-    ["exec", "astro", "dev", "--host", "127.0.0.1", "--port", String(port)],
+    fileURLToPath(new URL("../../../../apps/example/node_modules/.bin/astro", import.meta.url)),
+    ["dev", "--host", "127.0.0.1", "--port", String(port)],
     {
       cwd: new URL("../../../../apps/example/", import.meta.url),
       env: {
-        ...process.env,
         ASTRO_TELEMETRY_DISABLED: "1",
-        CI: "false",
+        HOME: process.env.HOME,
+        NODE_ENV: "development",
+        PATH: process.env.PATH,
+        TMPDIR: process.env.TMPDIR,
       },
       detached: true,
-      stdio: "ignore",
+      stdio: "inherit",
     },
   );
 }

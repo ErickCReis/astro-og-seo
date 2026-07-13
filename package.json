@@ -8,27 +8,29 @@
   ],
   "type": "module",
   "scripts": {
-    "ready": "vp run astro-og-seo#build && vp check && vp run astro-og-seo#test:all && vp run -r build",
+    "ready": "vp run astro-og-seo#build && vp check && vp run astro-og-seo#test:all && vp run package:smoke && vp run -r build",
+    "package:smoke": "vp run astro-og-seo#test:package",
     "dev": "vp run -r --parallel dev",
     "prepare": "vp config",
     "test": "vp run astro-og-seo#test:all"
   },
   "devDependencies": {
+    "@vitest/browser-playwright": "^4.1.10",
     "decode-named-character-reference": "^1.3.0",
-    "happy-dom": "^20.9.0",
+    "happy-dom": "^20.10.6",
     "jsdom": "^29.1.1",
     "pixelmatch": "^7.2.0",
-    "playwright": "^1.59.1",
+    "playwright": "^1.61.1",
     "pngjs": "^7.0.0",
     "sharp": "^0.34.5",
-    "vite-plus": "latest"
+    "vite-plus": "0.2.4"
   },
   "overrides": {
-    "vite": "npm:@voidzero-dev/vite-plus-core@latest",
-    "vitest": "npm:@voidzero-dev/vite-plus-test@latest"
+    "undici": "7.28.0",
+    "ws": "8.21.0"
   },
   "engines": {
-    "node": ">=24"
+    "node": ">=22.12.0"
   },
   "packageManager": "bun@1.3.13"
 }

@@ -4,7 +4,7 @@ import { chromium, type Browser } from "playwright";
 import { assertImage } from "../helpers/image";
 import { startExampleDevServer, stopProcess, waitForUrl } from "../helpers/playwright";
 
-const port = 4328;
+const port = 4338;
 const baseUrl = `http://127.0.0.1:${port}`;
 
 let server: ChildProcess | undefined;
@@ -38,16 +38,14 @@ describe("Astro dev toolbar", () => {
         "template[data-astro-og-seo-image]",
       );
 
-      return template
-        ? {
-            html: template.innerHTML,
-            stylesheet: template.dataset.stylesheet ?? "",
-          }
+      return template?.dataset.astroOgSeoImage
+        ? JSON.parse(atob(template.dataset.astroOgSeoImage))
         : null;
     });
 
     expect(payload).toEqual({
       html: expect.stringContaining("Astro OG SEO"),
+      pathname: "/",
       stylesheet: expect.any(String),
     });
 
