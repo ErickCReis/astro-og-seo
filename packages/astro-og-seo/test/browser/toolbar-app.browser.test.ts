@@ -42,13 +42,16 @@ describe("toolbar app browser rendering", () => {
     );
 
     await vi.waitFor(() => {
-      expect(canvas.textContent).toContain("SEO signal");
+      expect(canvas.textContent).toContain("SEO inspector");
       expect(canvas.textContent).toContain("Open Graph title is set");
     });
 
     const window = canvas.querySelector("astro-dev-toolbar-window");
 
     expect(window).toBeTruthy();
+
+    const inspector = canvas.querySelector<HTMLElement>(".inspector")!;
+    expect(inspector.scrollWidth).toBeLessThanOrEqual(inspector.clientWidth);
 
     await vi.waitFor(() => {
       expect(

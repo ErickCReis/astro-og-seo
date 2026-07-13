@@ -8,6 +8,7 @@ import styles from "./app.css?inline";
 
 const endpoint = "/__astro-og-seo/preview";
 const severityOrder: SeoSeverity[] = ["error", "warning", "info", "pass"];
+const issueOrder: SeoSeverity[] = ["error", "warning", "info"];
 
 const Panel: Component = () => {
   const snapshot = readSeoSnapshot();
@@ -25,6 +26,8 @@ const Panel: Component = () => {
       ]),
     ),
   );
+  const issues = diagnostics.filter((item) => item.severity !== "pass");
+  const passes = diagnostics.filter((item) => item.severity === "pass");
   let active = true;
 
   onMount(async () => {
@@ -56,11 +59,11 @@ const Panel: Component = () => {
       <main class="inspector">
         <header class="masthead">
           <div>
-            <p class="eyebrow">SEO signal</p>
+            <p class="eyebrow">SEO inspector</p>
             <h1>{window.location.pathname}</h1>
           </div>
           <div class="rail" aria-label="Diagnostic summary">
-            <For each={severityOrder}>
+            <For each={issueOrder}>
               {(severity) => (
                 <span class={`count ${severity}`}>
                   <b>{counts()[severity]}</b>
@@ -68,6 +71,7 @@ const Panel: Component = () => {
                 </span>
               )}
             </For>
+            <span class="pass-total">{counts().pass} passed</span>
           </div>
         </header>
         <Show when={imagePayload}>
@@ -82,18 +86,39 @@ const Panel: Component = () => {
           </section>
         </Show>
         <section class="diagnostics" aria-label="SEO diagnostics">
-          <For each={diagnostics}>
-            {(item) => (
-              <article class={`diagnostic ${item.severity}`}>
-                <span class="signal" aria-hidden="true"></span>
-                <div>
-                  <strong>{item.label}</strong>
-                  <p>{item.message}</p>
-                </div>
-                <em>{item.severity}</em>
-              </article>
-            )}
-          </For>
+          <Show when={issues.length > 0} fallback={<p class="empty-state">No SEO issues found.</p>}>
+            <div class="diagnostic-list">
+              <For each={issues}>
+                {(item) => (
+                  <article class={`diagnostic ${item.severity}`}>
+                    <span class="status-dot" aria-hidden="true"></span>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <p>{item.message}</p>
+                    </div>
+                  </article>
+                )}
+              </For>
+            </div>
+          </Show>
+          <Show when={passes.length > 0}>
+            <details class="passes">
+              <summary>{passes.length} checks passed</summary>
+              <div class="diagnostic-list">
+                <For each={passes}>
+                  {(item) => (
+                    <article class="diagnostic pass">
+                      <span class="status-dot" aria-hidden="true"></span>
+                      <div>
+                        <strong>{item.label}</strong>
+                        <p>{item.message}</p>
+                      </div>
+                    </article>
+                  )}
+                </For>
+              </div>
+            </details>
+          </Show>
         </section>
       </main>
     </astro-dev-toolbar-window>

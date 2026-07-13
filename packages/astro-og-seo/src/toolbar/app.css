@@ -13,16 +13,15 @@
   box-sizing: border-box;
 }
 .inspector {
-  width: min(720px, calc(100vw - 48px));
-  max-height: min(760px, calc(100vh - 88px));
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: 100%;
   overflow: auto;
-  border: 1px solid var(--line);
-  border-radius: 14px;
   background: var(--panel);
   color: var(--ink);
-  box-shadow: 0 28px 90px #0009;
   font:
-    13px/1.45 ui-sans-serif,
+    12px/1.4 ui-sans-serif,
     system-ui,
     sans-serif;
 }
@@ -31,14 +30,14 @@
   top: 0;
   z-index: 2;
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  gap: 10px;
+  padding: 12px;
   border-bottom: 1px solid var(--line);
   background: linear-gradient(120deg, #0a1b2d 0%, #07111ff2 68%);
   backdrop-filter: blur(12px);
 }
 .eyebrow {
-  margin: 0 0 7px;
+  margin: 0 0 4px;
   color: var(--cyan);
   font:
     700 10px/1 ui-monospace,
@@ -49,35 +48,31 @@
 h1 {
   margin: 0;
   overflow-wrap: anywhere;
-  font-size: 19px;
+  font-size: 15px;
   line-height: 1.2;
 }
 .rail {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
 }
 .count {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 7px;
+  display: inline-flex;
+  gap: 4px;
   align-items: baseline;
-  padding: 7px 9px;
-  border-left: 1px solid var(--line);
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
   color: var(--muted);
   font:
     600 10px/1 ui-monospace,
     monospace;
   text-transform: uppercase;
 }
-.count:first-child {
-  border-left: 0;
-}
 .count b {
   color: var(--ink);
-  font-size: 15px;
+  font-size: 12px;
 }
 .count.error b {
   color: var(--red);
@@ -88,8 +83,13 @@ h1 {
 .count.pass b {
   color: var(--green);
 }
+.pass-total {
+  margin-left: auto;
+  color: var(--green);
+  font-size: 11px;
+}
 .preview-block {
-  padding: 16px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
 }
 .preview-block img {
@@ -97,45 +97,48 @@ h1 {
   width: 100%;
   aspect-ratio: 1200/630;
   border: 1px solid var(--line);
-  border-radius: 9px;
+  border-radius: 6px;
   background: #02060b;
   object-fit: cover;
 }
 .preview-block p {
-  margin: 8px 0 0;
+  margin: 4px 0;
   color: var(--muted);
 }
 .preview-block .failure {
   color: var(--red);
 }
 .diagnostics {
-  padding: 4px 16px 12px;
+  padding: 4px 12px 10px;
+}
+.diagnostic-list {
+  min-width: 0;
 }
 .diagnostic {
   display: grid;
-  grid-template-columns: 3px 1fr auto;
-  gap: 12px;
+  grid-template-columns: 7px minmax(0, 1fr);
+  gap: 9px;
   align-items: start;
-  padding: 13px 0;
+  padding: 9px 0;
   border-bottom: 1px solid #17283b;
 }
 .diagnostic:last-child {
   border: 0;
 }
-.signal {
-  width: 3px;
-  height: 100%;
-  min-height: 30px;
-  border-radius: 4px;
+.status-dot {
+  width: 7px;
+  height: 7px;
+  margin-top: 5px;
+  border-radius: 50%;
   background: var(--muted);
 }
-.diagnostic.error .signal {
+.diagnostic.error .status-dot {
   background: var(--red);
 }
-.diagnostic.warning .signal {
+.diagnostic.warning .status-dot {
   background: var(--amber);
 }
-.diagnostic.pass .signal {
+.diagnostic.pass .status-dot {
   background: var(--green);
 }
 .diagnostic strong {
@@ -146,25 +149,20 @@ h1 {
   margin: 0;
   color: var(--muted);
 }
-.diagnostic em {
-  color: var(--muted);
-  font:
-    600 9px/1 ui-monospace,
-    monospace;
-  text-transform: uppercase;
+.empty-state {
+  margin: 8px 0;
+  color: var(--green);
 }
-@media (max-width: 560px) {
-  .inspector {
-    width: calc(100vw - 24px);
-  }
-  .rail {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .count:nth-child(3) {
-    border-left: 0;
-    border-top: 1px solid var(--line);
-  }
-  .count:nth-child(4) {
-    border-top: 1px solid var(--line);
-  }
+.passes {
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+}
+.passes summary {
+  padding: 9px 0 5px;
+  color: var(--green);
+  cursor: pointer;
+  font-weight: 600;
+}
+.passes .diagnostic:last-child {
+  border-bottom: 0;
 }

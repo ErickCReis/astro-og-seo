@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Constrain the SEO inspector to Astro's dev-toolbar window.
+- Simplify diagnostic summaries and collapse passing checks by default.
+- Add browser coverage for horizontal toolbar overflow.
+
 ## 0.1.0
 
 - Redesign the public metadata and integration APIs.
