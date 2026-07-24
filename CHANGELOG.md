@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.4
 
 - Serialize Takumi rendering to prevent elements from intermittently disappearing when multiple Open Graph images are generated concurrently.
 
