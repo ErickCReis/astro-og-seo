@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.3
 
 - Update Astro, Takumi, Vite+, TypeScript, and the remaining workspace dependencies, including transitive security patches.
 - Adapt generated-image rendering to Takumi 2's format-specific API and bundled default fonts.
