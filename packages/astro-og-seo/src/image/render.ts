@@ -7,10 +7,12 @@ import { getOutputPath } from "./paths";
 export function renderOgImage(html: string, config: ResolvedAstroOgSeoOptions) {
   if (config.image === false) throw new Error("astro-og-seo: generated images are disabled");
   const { width, height, format, stylesheet } = config.image;
-  return render(
-    `<div style="width:${width}px;height:${height}px;display:flex;overflow:hidden">${html}</div>`,
-    { width, height, format, stylesheets: [stylesheet], loadDefaultFonts: true },
-  );
+  const source = `<div style="width:${width}px;height:${height}px;display:flex;overflow:hidden">${html}</div>`;
+  const options = { width, height, stylesheets: [stylesheet] };
+
+  if (format === "jpeg") return render(source, { ...options, format: "jpeg" });
+  if (format === "webp") return render(source, { ...options, format: "webp" });
+  return render(source, { ...options, format: "png" });
 }
 
 export async function writeOgImage(

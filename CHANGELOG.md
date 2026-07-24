@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Update Astro, Takumi, Vite+, TypeScript, and the remaining workspace dependencies, including transitive security patches.
+- Adapt generated-image rendering to Takumi 2's format-specific API and bundled default fonts.
+- Expand package and workspace documentation, and replace the example's starter README.
+
 ## 0.1.2
 
 - Sort SEO diagnostics by severity and streamline the toolbar summary.

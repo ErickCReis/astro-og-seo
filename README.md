@@ -2,7 +2,7 @@
 
 SEO metadata, build-time Open Graph images, and an actionable Astro dev-toolbar inspector.
 
-The repository contains the published `astro-og-seo` package and two Astro fixtures. The integration targets Astro 6.4+ and Astro 7 on Node 22.12+.
+The repository contains the published `astro-og-seo` package, an example app, and the package's test fixtures. The integration supports Astro 6.4+ and Astro 7 on Node 22.12+.
 
 ## Capabilities
 
@@ -13,13 +13,19 @@ The repository contains the published `astro-og-seo` package and two Astro fixtu
 
 ## Workspace
 
+Install [Vite+](https://viteplus.dev/guide/) and run commands from the repository root:
+
 ```bash
 vp install
 vp run ready
 vp run dev
 ```
 
-The package source lives in `packages/astro-og-seo`; `apps/example` is the current Astro consumer fixture.
+- `vp run ready` builds the package, checks the workspace, runs every test suite, inspects the package tarball, and builds all workspaces.
+- `vp run dev` builds the package once, then watches the library and starts the example app.
+- `vp run test` runs the library's unit, integration, browser, and end-to-end tests.
+
+The package source lives in `packages/astro-og-seo`; `apps/example` is the interactive consumer fixture.
 
 ## Release
 
