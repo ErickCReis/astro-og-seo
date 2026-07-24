@@ -1,4 +1,5 @@
 import { defineConfig } from "vite-plus";
+import { createTestProjects } from "./packages/astro-og-seo/vite.config.ts";
 
 export default defineConfig({
   staged: {
@@ -6,6 +7,9 @@ export default defineConfig({
   },
   fmt: {},
   lint: { options: { typeAware: true, typeCheck: true } },
+  test: {
+    projects: createTestProjects({ buildE2e: true }),
+  },
   run: {
     cache: true,
   },

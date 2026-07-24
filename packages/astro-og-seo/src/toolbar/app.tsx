@@ -26,7 +26,11 @@ const Panel: Component = () => {
       ]),
     ),
   );
-  const issues = diagnostics.filter((item) => item.severity !== "pass");
+  const issues = diagnostics
+    .filter((item) => item.severity !== "pass")
+    .sort(
+      (left, right) => severityOrder.indexOf(left.severity) - severityOrder.indexOf(right.severity),
+    );
   const passes = diagnostics.filter((item) => item.severity === "pass");
   let active = true;
 
@@ -58,21 +62,26 @@ const Panel: Component = () => {
       <style>{styles}</style>
       <main class="inspector">
         <header class="masthead">
-          <div>
+          <div class="masthead-row">
             <p class="eyebrow">SEO inspector</p>
-            <h1>{window.location.pathname}</h1>
+            <div class="rail" aria-label="Diagnostic summary">
+              <For each={issueOrder}>
+                {(severity) => (
+                  <span class={`count ${severity}`}>
+                    <b>{counts()[severity]}</b>
+                    {severity}
+                  </span>
+                )}
+              </For>
+              <span class="count pass">
+                <b>{counts().pass}</b>
+                OK
+              </span>
+            </div>
           </div>
-          <div class="rail" aria-label="Diagnostic summary">
-            <For each={issueOrder}>
-              {(severity) => (
-                <span class={`count ${severity}`}>
-                  <b>{counts()[severity]}</b>
-                  {severity}
-                </span>
-              )}
-            </For>
-            <span class="pass-total">{counts().pass} passed</span>
-          </div>
+          <h1>
+            <span>Path:</span> {window.location.pathname}
+          </h1>
         </header>
         <Show when={imagePayload}>
           <section class="preview-block" aria-label="Open Graph image preview">
@@ -92,10 +101,7 @@ const Panel: Component = () => {
                 {(item) => (
                   <article class={`diagnostic ${item.severity}`}>
                     <span class="status-dot" aria-hidden="true"></span>
-                    <div>
-                      <strong>{item.label}</strong>
-                      <p>{item.message}</p>
-                    </div>
+                    <strong>{item.label}</strong>
                   </article>
                 )}
               </For>
@@ -109,10 +115,7 @@ const Panel: Component = () => {
                   {(item) => (
                     <article class="diagnostic pass">
                       <span class="status-dot" aria-hidden="true"></span>
-                      <div>
-                        <strong>{item.label}</strong>
-                        <p>{item.message}</p>
-                      </div>
+                      <strong>{item.label}</strong>
                     </article>
                   )}
                 </For>

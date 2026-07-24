@@ -10,7 +10,7 @@
   "scripts": {
     "ready": "vp run astro-og-seo#build && vp check && vp run astro-og-seo#test:all && vp run package:smoke && vp run -r build",
     "package:smoke": "vp run astro-og-seo#test:package",
-    "dev": "vp run -r --parallel dev",
+    "dev": "vp run astro-og-seo#build && vp run -r --parallel dev",
     "prepare": "vp config",
     "test": "vp run astro-og-seo#test:all"
   },

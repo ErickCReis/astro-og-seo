@@ -43,7 +43,7 @@ describe("toolbar app browser rendering", () => {
 
     await vi.waitFor(() => {
       expect(canvas.textContent).toContain("SEO inspector");
-      expect(canvas.textContent).toContain("Open Graph title is set");
+      expect(canvas.textContent).toContain("Open Graph title");
     });
 
     const window = canvas.querySelector("astro-dev-toolbar-window");
@@ -52,6 +52,23 @@ describe("toolbar app browser rendering", () => {
 
     const inspector = canvas.querySelector<HTMLElement>(".inspector")!;
     expect(inspector.scrollWidth).toBeLessThanOrEqual(inspector.clientWidth);
+    expect(canvas.querySelector(".masthead-row")?.children).toHaveLength(2);
+    expect(canvas.querySelector("h1")?.textContent).toContain("Path:");
+    expect(canvas.querySelector("h1")?.textContent).toContain(globalThis.window.location.pathname);
+
+    const counts = [...canvas.querySelectorAll(".count")];
+    expect(counts).toHaveLength(4);
+    expect(counts.at(-1)?.classList).toContain("pass");
+    expect(counts.at(-1)?.textContent).toContain("OK");
+
+    const issues = [...canvas.querySelectorAll(".diagnostics > .diagnostic-list > .diagnostic")];
+    expect(issues.map((issue) => issue.classList.item(1))).toEqual(["error", "warning"]);
+    expect(issues.map((issue) => issue.querySelector("strong")?.textContent)).toEqual([
+      "Title",
+      "Open Graph type",
+    ]);
+    expect(canvas.querySelector(".diagnostic p")).toBeNull();
+    expect(canvas.textContent).not.toContain("is missing.");
 
     await vi.waitFor(() => {
       expect(

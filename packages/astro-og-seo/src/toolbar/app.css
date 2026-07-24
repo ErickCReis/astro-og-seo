@@ -26,18 +26,21 @@
     sans-serif;
 }
 .masthead {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: grid;
   gap: 10px;
   padding: 12px;
   border-bottom: 1px solid var(--line);
   background: linear-gradient(120deg, #0a1b2d 0%, #07111ff2 68%);
-  backdrop-filter: blur(12px);
+}
+.masthead-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  justify-content: space-between;
 }
 .eyebrow {
-  margin: 0 0 4px;
+  margin: 0;
   color: var(--cyan);
   font:
     700 10px/1 ui-monospace,
@@ -48,8 +51,13 @@
 h1 {
   margin: 0;
   overflow-wrap: anywhere;
-  font-size: 15px;
+  color: var(--muted);
+  font-size: 12px;
   line-height: 1.2;
+}
+h1 span {
+  color: var(--ink);
+  font-weight: 600;
 }
 .rail {
   display: flex;
@@ -82,11 +90,6 @@ h1 {
 }
 .count.pass b {
   color: var(--green);
-}
-.pass-total {
-  margin-left: auto;
-  color: var(--green);
-  font-size: 11px;
 }
 .preview-block {
   padding: 10px 12px;
@@ -143,11 +146,6 @@ h1 {
 }
 .diagnostic strong {
   display: block;
-  margin-bottom: 3px;
-}
-.diagnostic p {
-  margin: 0;
-  color: var(--muted);
 }
 .empty-state {
   margin: 8px 0;
