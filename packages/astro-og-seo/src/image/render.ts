@@ -4,15 +4,29 @@ import { render } from "takumi-js";
 import type { ResolvedAstroOgSeoOptions } from "../seo/types";
 import { getOutputPath } from "./paths";
 
+// Takumi can silently omit elements when multiple images render at the same time.
+let renderQueue = Promise.resolve();
+
+function enqueueRender(task: () => ReturnType<typeof render>) {
+  const result = renderQueue.then(task);
+  renderQueue = result.then(
+    () => undefined,
+    () => undefined,
+  );
+  return result;
+}
+
 export function renderOgImage(html: string, config: ResolvedAstroOgSeoOptions) {
   if (config.image === false) throw new Error("astro-og-seo: generated images are disabled");
   const { width, height, format, stylesheet } = config.image;
   const source = `<div style="width:${width}px;height:${height}px;display:flex;overflow:hidden">${html}</div>`;
   const options = { width, height, stylesheets: [stylesheet] };
 
-  if (format === "jpeg") return render(source, { ...options, format: "jpeg" });
-  if (format === "webp") return render(source, { ...options, format: "webp" });
-  return render(source, { ...options, format: "png" });
+  return enqueueRender(() => {
+    if (format === "jpeg") return render(source, { ...options, format: "jpeg" });
+    if (format === "webp") return render(source, { ...options, format: "webp" });
+    return render(source, { ...options, format: "png" });
+  });
 }
 
 export async function writeOgImage(

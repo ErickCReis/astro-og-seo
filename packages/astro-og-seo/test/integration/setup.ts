@@ -22,7 +22,7 @@ function getFill(html: string) {
 }
 
 vi.mock("takumi-js", () => ({
-  async render(
+  render: vi.fn(async function render(
     html: string,
     options: {
       width: number;
@@ -38,5 +38,5 @@ vi.mock("takumi-js", () => ({
     `;
 
     return sharp(Buffer.from(svg))[options.format]().toBuffer();
-  },
+  }),
 }));
