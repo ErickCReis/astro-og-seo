@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+- Sort SEO diagnostics by severity and streamline the toolbar summary.
+- Improve the inspector header, page-path labeling, and scrolling behavior.
+- Fix root test discovery, E2E task behavior, and dev-server startup ordering.
+
 ## 0.1.1
 
 - Constrain the SEO inspector to Astro's dev-toolbar window.
