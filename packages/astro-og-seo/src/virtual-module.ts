@@ -7,6 +7,30 @@ type VirtualModulePlugin = {
   load(id: string): string | null;
 };
 
+function resolveStylesheetSpecifiers(stylesheet: string | string[] | undefined, root?: URL) {
+  const paths =
+    stylesheet === undefined ? [] : Array.isArray(stylesheet) ? stylesheet : [stylesheet];
+  return paths.map((stylesheetPath) =>
+    stylesheetPath.startsWith(".") && root
+      ? fileURLToPath(new URL(stylesheetPath, root))
+      : stylesheetPath,
+  );
+}
+
+function createStylesheetModule(specifiers: string[]) {
+  if (specifiers.length === 0) return "const stylesheet = '';";
+  if (specifiers.length === 1) {
+    return `import stylesheet from ${JSON.stringify(`${specifiers[0]}?inline`)};`;
+  }
+
+  const imports = specifiers.map(
+    (specifier, index) =>
+      `import stylesheet${index} from ${JSON.stringify(`${specifier}?inline`)};`,
+  );
+  const values = specifiers.map((_, index) => `stylesheet${index}`).join(", ");
+  return [...imports, `const stylesheet = [${values}].join("\\n");`].join("\n");
+}
+
 export const VIRTUAL_MODULE_ID = "virtual:astro-og-seo";
 export const RESOLVED_VIRTUAL_MODULE_ID = `\0${VIRTUAL_MODULE_ID}`;
 
@@ -24,14 +48,12 @@ export function createVirtualModulePlugin(
     load(id) {
       if (id !== RESOLVED_VIRTUAL_MODULE_ID) return null;
       const resolved = getResolvedOptions();
-      const stylesheetPath = options.image !== false ? options.image?.stylesheet : undefined;
-      const stylesheetSpecifier =
-        stylesheetPath?.startsWith(".") && root
-          ? fileURLToPath(new URL(stylesheetPath, root))
-          : stylesheetPath;
-      const stylesheet = stylesheetSpecifier
-        ? `import stylesheet from ${JSON.stringify(`${stylesheetSpecifier}?inline`)};`
-        : "const stylesheet = '';";
+      const stylesheet = createStylesheetModule(
+        resolveStylesheetSpecifiers(
+          options.image === false ? undefined : options.image?.stylesheet,
+          root,
+        ),
+      );
       return [
         stylesheet,
         `export const astroOgSeoConfig = ${JSON.stringify(resolved)};`,
