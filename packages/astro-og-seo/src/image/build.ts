@@ -8,7 +8,11 @@ import { writeOgImage } from "./render";
 
 async function collectHtmlFiles(dir: string) {
   const entries = await readdir(dir, { recursive: true });
-  return entries.filter((entry) => entry.endsWith(".html")).map((entry) => join(dir, entry));
+  const files: string[] = [];
+  for (const entry of entries) {
+    if (entry.endsWith(".html")) files.push(join(dir, entry));
+  }
+  return files;
 }
 
 async function inBatches<T>(items: T[], size: number, task: (item: T) => Promise<void>) {
@@ -33,8 +37,10 @@ export async function generateBuildImages(
   }> = [];
   const destinations = new Map<string, string>();
 
-  for (const file of files) {
-    const html = await readFile(file, "utf8");
+  const fileContents = await Promise.all(
+    files.map(async (file) => ({ file, html: await readFile(file, "utf8") })),
+  );
+  for (const { file, html } of fileContents) {
     for (const marker of readImageMarkers(html)) {
       const destination = getOutputPath(marker.payload.pathname, config);
       const previous = destinations.get(destination);
