@@ -1,8 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
-- Render generated Open Graph images on demand for Astro SSR output.
+- Add Tailwind CSS support for generated Open Graph images, including multiple stylesheet entrypoints and a Tailwind example route.
+- Render generated Open Graph images on demand for Astro SSR output with a bounded process-local cache.
+- Make SEO toolbar diagnostics actionable by showing remediation guidance for metadata, indexing, length, language, and article-date issues.
+- Expand SSR, Tailwind, and package documentation and add coverage for the new runtime and stylesheet behavior.
 
 ## 0.1.4
 

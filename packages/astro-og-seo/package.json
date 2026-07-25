@@ -1,6 +1,6 @@
 {
   "name": "astro-og-seo",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "SEO metadata, Open Graph images, and a dev-toolbar inspector for Astro",
   "keywords": [
     "astro-component",
