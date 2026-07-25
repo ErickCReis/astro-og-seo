@@ -1,6 +1,6 @@
 # astro-og-seo
 
-SEO metadata, build-time Open Graph images, and an actionable Astro dev-toolbar inspector.
+SEO metadata, static and SSR Open Graph images, and an actionable Astro dev-toolbar inspector.
 
 The repository contains the published `astro-og-seo` package, an example app, and the package's test fixtures. The integration supports Astro 6.4+ and Astro 7 on Node 22.12+.
 
@@ -9,7 +9,7 @@ The repository contains the published `astro-og-seo` package, an example app, an
 - Canonical, robots, Open Graph, Twitter, article, and localized alternate metadata.
 - Page-local Astro image slots rendered to PNG, JPEG, or WebP with Takumi.
 - A dev-toolbar inspector for missing, duplicate, invalid, or conflicting metadata.
-- Static image generation with metadata-only support for server output.
+- Static image generation and request-time image rendering for server output.
 
 ## Workspace
 

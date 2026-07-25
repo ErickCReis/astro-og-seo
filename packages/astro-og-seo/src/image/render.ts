@@ -16,7 +16,7 @@ function enqueueRender(task: () => ReturnType<typeof render>) {
   return result;
 }
 
-export function renderOgImage(html: string, config: ResolvedAstroOgSeoOptions) {
+export function renderOgImage(html: string, config: Pick<ResolvedAstroOgSeoOptions, "image">) {
   if (config.image === false) throw new Error("astro-og-seo: generated images are disabled");
   const { width, height, format, stylesheet } = config.image;
   const source = `<div style="width:${width}px;height:${height}px;display:flex;overflow:hidden">${html}</div>`;

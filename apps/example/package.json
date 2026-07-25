@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "astro dev",
+    "dev:ssr": "astro dev --config astro.config.ssr.ts",
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro"

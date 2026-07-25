@@ -89,14 +89,14 @@ const config: Record<string, unknown> = {
     noExternal: ["takumi-js", "@takumi-rs/core", "decode-named-character-reference"],
   },
   pack: {
-    entry: ["src/index.ts", "src/toolbar-app.tsx"],
+    entry: ["src/index.ts", "src/toolbar-app.tsx", "src/image/endpoint.ts"],
     copy: ["src/components"],
     plugins: [solid()],
     dts: {
       tsgo: true,
     },
     exports: {
-      exclude: ["toolbar-app"],
+      exclude: ["toolbar-app", "image/endpoint"],
       customExports: {
         "./OgSeo.astro": "./dist/components/OgSeo.astro",
       },

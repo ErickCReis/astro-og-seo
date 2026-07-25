@@ -10,7 +10,15 @@ import { createVirtualModulePlugin } from "./virtual-module";
 const require = createRequire(import.meta.url);
 
 function getNodeRenderAliases() {
-  return { "@takumi-rs/core": require.resolve("@takumi-rs/core") };
+  const coreEntry = require.resolve("@takumi-rs/core");
+  const esmEntry = coreEntry.endsWith(".cjs") ? `${coreEntry.slice(0, -4)}.mjs` : coreEntry;
+
+  return { "@takumi-rs/core": esmEntry };
+}
+
+function getImageEndpointEntrypoint() {
+  const filename = import.meta.url.endsWith(".ts") ? "endpoint.ts" : "endpoint.mjs";
+  return new URL(`./image/${filename}`, import.meta.url);
 }
 
 export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
@@ -20,7 +28,7 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
   return {
     name: "astro-og-seo",
     hooks: {
-      "astro:config:setup": ({ addDevToolbarApp, config, updateConfig }) => {
+      "astro:config:setup": ({ addDevToolbarApp, config, injectRoute, updateConfig }) => {
         astroConfig = config;
         resolvedOptions = resolveAstroOgSeoOptions(options, config);
         if (resolvedOptions.toolbarEnabled) {
@@ -38,14 +46,17 @@ export function astroOgSeo(options: AstroOgSeoOptions): AstroIntegration {
             plugins: [createVirtualModulePlugin(options, () => resolvedOptions, config.root)],
           },
         });
-      },
-      "astro:config:done": ({ buildOutput, injectTypes, logger }) => {
-        resolvedOptions = resolveAstroOgSeoOptions(options, astroConfig, buildOutput);
-        if (buildOutput === "server" && resolvedOptions.image !== false) {
-          logger.warn(
-            "generated images are unavailable for server output; external image metadata still works",
-          );
+
+        if (config.output === "server" && resolvedOptions.image !== false) {
+          injectRoute({
+            pattern: `/${resolvedOptions.image.outputDir}/[...path]`,
+            entrypoint: getImageEndpointEntrypoint(),
+            prerender: false,
+          });
         }
+      },
+      "astro:config:done": ({ buildOutput, injectTypes }) => {
+        resolvedOptions = resolveAstroOgSeoOptions(options, astroConfig, buildOutput);
         injectTypes({
           filename: "astro-og-seo.d.ts",
           content: `declare module "virtual:astro-og-seo" {
