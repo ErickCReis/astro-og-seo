@@ -1,6 +1,6 @@
 ---
 import { astroOgSeoConfig } from "virtual:astro-og-seo";
-import { getOgImagePathname } from "astro-og-seo";
+import { cacheServerOgImage, getOgImagePathname, renderOgImage } from "astro-og-seo";
 import type { OgSeoProps } from "astro-og-seo";
 
 export interface Props extends OgSeoProps {}
@@ -29,10 +29,6 @@ if (hasGeneratedImage && image) {
 if (hasGeneratedImage && astroOgSeoConfig.image === false) {
   throw new Error(`astro-og-seo: ${pathname} uses an image slot but generated images are disabled`);
 }
-if (hasGeneratedImage && astroOgSeoConfig.buildOutput === "server") {
-  throw new Error(`astro-og-seo: generated images are unavailable for server output (${pathname})`);
-}
-
 function toIsoDate(value: Date | string | undefined, name: string) {
   if (value === undefined) return undefined;
   const date = value instanceof Date ? value : new Date(value);
@@ -43,8 +39,11 @@ function toIsoDate(value: Date | string | undefined, name: string) {
 const publishedTime = toIsoDate(article?.publishedTime, "article.publishedTime");
 const modifiedTime = toIsoDate(article?.modifiedTime, "article.modifiedTime");
 const pageType = type ?? (article ? "article" : "website");
-const generatedUrl = hasGeneratedImage && astroOgSeoConfig.image
-  ? new URL(getOgImagePathname(pathname, astroOgSeoConfig as never), astroOgSeoConfig.site).toString()
+const generatedPathname = hasGeneratedImage && astroOgSeoConfig.image
+  ? getOgImagePathname(pathname, astroOgSeoConfig)
+  : undefined;
+const generatedUrl = generatedPathname
+  ? new URL(generatedPathname, astroOgSeoConfig.site).toString()
   : undefined;
 const imageUrl = image ? new URL(image.url.toString(), astroOgSeoConfig.site).toString() : generatedUrl;
 const imageAlt = image?.alt ?? generatedImageAlt ?? title;
@@ -58,7 +57,11 @@ if (twitterCard === "summary_large_image" && !imageUrl) {
   throw new Error(`astro-og-seo: ${pathname} uses summary_large_image without an image`);
 }
 const renderedImage = hasGeneratedImage ? await Astro.slots.render("image") : undefined;
-const marker = renderedImage
+if (renderedImage && generatedPathname && astroOgSeoConfig.buildOutput === "server" && astroOgSeoConfig.image) {
+  const image = await renderOgImage(renderedImage, { image: astroOgSeoConfig.image });
+  cacheServerOgImage(generatedPathname, image);
+}
+const marker = renderedImage && astroOgSeoConfig.buildOutput === "static"
   ? Buffer.from(JSON.stringify({ pathname, html: renderedImage, stylesheet: astroOgSeoConfig.image && astroOgSeoConfig.image.stylesheet }), "utf8").toString("base64")
   : undefined;
 ---

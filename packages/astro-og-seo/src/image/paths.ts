@@ -15,7 +15,10 @@ function getPathSegments(pathname: string) {
     });
 }
 
-export function getOgImagePathname(pathname: string, config: ResolvedAstroOgSeoOptions) {
+export function getOgImagePathname(
+  pathname: string,
+  config: Pick<ResolvedAstroOgSeoOptions, "image">,
+) {
   if (config.image === false) throw new Error("astro-og-seo: generated images are disabled");
   return `/${[config.image.outputDir, ...getPathSegments(pathname), `index.${config.image.format}`].join("/")}`;
 }

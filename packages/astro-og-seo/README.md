@@ -1,6 +1,6 @@
 # astro-og-seo
 
-SEO metadata, build-time Open Graph images, and an actionable dev-toolbar inspector for Astro 6.4+ and Astro 7.
+SEO metadata, static and SSR Open Graph images, and an actionable dev-toolbar inspector for Astro 6.4+ and Astro 7.
 
 ## Install
 
@@ -47,7 +47,7 @@ import OgSeo from "astro-og-seo/OgSeo.astro";
   alternates={[{ href: "https://example.com/pt/", hreflang: "pt-BR" }]}
   alternateLocales={["pt-BR"]}
 >
-  <!-- Optional: this slot becomes a build-time Open Graph image. -->
+  <!-- Optional: this slot becomes a generated Open Graph image. -->
   <div slot="image" class="og-card">
     <h1>A useful page title</h1>
   </div>
@@ -134,7 +134,37 @@ export default defineConfig({
 
 Import the stylesheet from a page or layout as usual, and use statically written utility classes in the image slot. The integration inlines the processed stylesheet for both build-time images and toolbar previews. Dynamic class names must be safelisted or written as complete class names so Tailwind can generate them.
 
-Generated images are intentionally static-only. Server-output projects can use the metadata component, toolbar, and external image URLs, but an image slot produces a clear build error.
+For `output: "server"`, the slot is rendered during the page request and served from the same generated URL. The SSR route keeps a bounded in-memory cache of rendered images, so the page should be requested before its `og:image` URL. This works with a long-lived server process; use an external image or a shared image cache when deploying across isolated serverless instances.
+
+Use Astro's server output when the image should be generated on demand:
+
+```ts
+import astroOgSeo from "astro-og-seo";
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  output: "server",
+  site: "https://example.com",
+  integrations: [
+    astroOgSeo({
+      siteName: "Example",
+      image: {
+        stylesheet: "./src/styles/og-image.css",
+        outputDir: "_og",
+      },
+    }),
+  ],
+});
+```
+
+The `OgSeo` usage stays the same. Request the page before its generated URL so the server can render and cache the page-local slot:
+
+```bash
+curl http://localhost:4321/guides/intro/
+curl http://localhost:4321/_og/guides/intro/index.png --output intro.png
+```
+
+SSR images are served at runtime and are not written to `dist/_og` during the build.
 
 ## Integration options
 

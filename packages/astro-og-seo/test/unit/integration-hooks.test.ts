@@ -30,6 +30,7 @@ describe("astroOgSeo integration hooks", () => {
     expect(updateConfig).toHaveBeenCalledWith(
       expect.objectContaining({
         vite: expect.objectContaining({
+          resolve: { alias: { "@takumi-rs/core": expect.stringMatching(/\.mjs$/) } },
           plugins: [expect.objectContaining({ name: "astro-og-seo:virtual-module" })],
         }),
       }),
@@ -48,5 +49,30 @@ describe("astroOgSeo integration hooks", () => {
       updateConfig: vi.fn(),
     } as never);
     expect(addDevToolbarApp).not.toHaveBeenCalled();
+  });
+
+  test("injects the SSR image route", async () => {
+    const integration = astroOgSeo({
+      siteName: "Site",
+      image: { outputDir: "social" },
+    });
+    const injectRoute = vi.fn();
+
+    await integration.hooks["astro:config:setup"]?.({
+      addDevToolbarApp: vi.fn(),
+      config: {
+        outDir: new URL("file:///tmp/dist/"),
+        output: "server",
+        site: new URL("https://example.test"),
+      },
+      injectRoute,
+      updateConfig: vi.fn(),
+    } as never);
+
+    expect(injectRoute).toHaveBeenCalledWith({
+      pattern: "/social/[...path]",
+      entrypoint: expect.any(URL),
+      prerender: false,
+    });
   });
 });
