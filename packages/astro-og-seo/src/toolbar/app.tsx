@@ -101,7 +101,10 @@ const Panel: Component = () => {
                 {(item) => (
                   <article class={`diagnostic ${item.severity}`}>
                     <span class="status-dot" aria-hidden="true"></span>
-                    <strong>{item.label}</strong>
+                    <div>
+                      <strong>{item.label}</strong>
+                      <p>{item.message}</p>
+                    </div>
                   </article>
                 )}
               </For>
