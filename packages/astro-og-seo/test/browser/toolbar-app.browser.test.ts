@@ -67,8 +67,9 @@ describe("toolbar app browser rendering", () => {
       "Title",
       "Open Graph type",
     ]);
-    expect(canvas.querySelector(".diagnostic p")).toBeNull();
-    expect(canvas.textContent).not.toContain("is missing.");
+    expect(canvas.querySelector(".diagnostic.warning p")?.textContent).toBe(
+      'Add og:type, usually "website" or "article", to describe the page.',
+    );
 
     await vi.waitFor(() => {
       expect(
