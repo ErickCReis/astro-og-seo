@@ -1,14 +1,17 @@
 ---
 import OgSeo from "astro-og-seo/OgSeo.astro";
+import "../styles/global.css";
 
 export interface Props {
 	title?: string;
 	description?: string;
+	imageStyle?: "css" | "tailwind";
 }
 
 const {
 	title = "Astro OG SEO Example",
 	description = "An Astro example app using the local astro-og-seo package.",
+	imageStyle = "css",
 } = Astro.props;
 ---
 
@@ -22,11 +25,19 @@ const {
 		<meta name="generator" content={Astro.generator} />
 		<OgSeo title={title} description={description}>
 			<Fragment slot="image">
-				<div class="og-image">
-					<p>Astro OG SEO</p>
-					<h1>{title}</h1>
-					<span>{description}</span>
-				</div>
+				{imageStyle === "tailwind" ? (
+					<div class="box-border flex h-[630px] w-[1200px] flex-col justify-center gap-7 overflow-hidden bg-gray-900 p-[72px] font-sans text-white">
+						<p class="m-0 text-[34px] font-bold uppercase text-cyan-300">Astro OG SEO</p>
+						<h1 class="m-0 max-w-[900px] text-[82px] leading-none">{title}</h1>
+						<span class="max-w-[850px] text-[34px] leading-[1.25] text-gray-300">{description}</span>
+					</div>
+				) : (
+					<div class="og-image">
+						<p>Astro OG SEO</p>
+						<h1>{title}</h1>
+						<span>{description}</span>
+					</div>
+				)}
 			</Fragment>
 		</OgSeo>
 	</head>

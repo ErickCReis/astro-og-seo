@@ -1,7 +1,7 @@
 export type AstroOgSeoImageFormat = "png" | "jpeg" | "webp";
 
 export type AstroOgSeoImageOptions = {
-  stylesheet?: string;
+  stylesheet?: string | string[];
   outputDir?: string;
   width?: number;
   height?: number;

@@ -103,22 +103,51 @@ Passing `article` automatically changes the Open Graph type to `article` unless 
 
 The `image` slot is rendered during static builds to `dist/_og` by default. The generated URL follows the page pathname: `/guides/intro/` becomes `/_og/guides/intro/index.png`. If the slot is omitted, no fallback image or image metadata is generated.
 
-The slot can use page-local content, while its CSS comes from the integration's `image.stylesheet` file. Takumi provides the default Geist fonts.
+The slot can use page-local content, while its CSS comes from the integration's `image.stylesheet` entrypoint or entrypoints. Pass an array when the image uses styles from multiple files. Takumi provides the default Geist fonts.
+
+### Tailwind CSS
+
+Tailwind utilities work in an image slot when one of the stylesheets passed to `image.stylesheet` is a Tailwind entrypoint processed by your Astro/Vite setup. With Tailwind CSS v4, configure the Vite plugin and point the integration at those same stylesheets:
+
+```ts
+// astro.config.ts
+import tailwindcss from "@tailwindcss/vite";
+import { astroOgSeo } from "astro-og-seo";
+import { defineConfig } from "astro/config";
+
+export default defineConfig({
+  site: "https://example.com",
+  vite: { plugins: [tailwindcss()] },
+  integrations: [
+    astroOgSeo({
+      siteName: "Example",
+      image: { stylesheet: ["./src/styles/og-image.css", "./src/styles/global.css"] },
+    }),
+  ],
+});
+```
+
+```css
+/* src/styles/global.css */
+@import "tailwindcss";
+```
+
+Import the stylesheet from a page or layout as usual, and use statically written utility classes in the image slot. The integration inlines the processed stylesheet for both build-time images and toolbar previews. Dynamic class names must be safelisted or written as complete class names so Tailwind can generate them.
 
 Generated images are intentionally static-only. Server-output projects can use the metadata component, toolbar, and external image URLs, but an image slot produces a clear build error.
 
 ## Integration options
 
-| Option             | Default | Description                                                              |
-| ------------------ | ------- | ------------------------------------------------------------------------ |
-| `siteName`         | —       | Required value for `og:site_name`.                                       |
-| `toolbar.enabled`  | `true`  | Registers the SEO inspector in Astro's dev toolbar.                      |
-| `image`            | `{}`    | Generated-image settings. Set to `false` to disable image slots.         |
-| `image.stylesheet` | —       | CSS file imported and inlined for generated images and toolbar previews. |
-| `image.outputDir`  | `"_og"` | Safe relative directory inside Astro's build output.                     |
-| `image.width`      | `1200`  | Integer from 1 through 8192.                                             |
-| `image.height`     | `630`   | Integer from 1 through 8192.                                             |
-| `image.format`     | `"png"` | Output format: `"png"`, `"jpeg"`, or `"webp"`.                           |
+| Option             | Default | Description                                                                       |
+| ------------------ | ------- | --------------------------------------------------------------------------------- |
+| `siteName`         | —       | Required value for `og:site_name`.                                                |
+| `toolbar.enabled`  | `true`  | Registers the SEO inspector in Astro's dev toolbar.                               |
+| `image`            | `{}`    | Generated-image settings. Set to `false` to disable image slots.                  |
+| `image.stylesheet` | —       | CSS file or files imported and inlined for generated images and toolbar previews. |
+| `image.outputDir`  | `"_og"` | Safe relative directory inside Astro's build output.                              |
+| `image.width`      | `1200`  | Integer from 1 through 8192.                                                      |
+| `image.height`     | `630`   | Integer from 1 through 8192.                                                      |
+| `image.format`     | `"png"` | Output format: `"png"`, `"jpeg"`, or `"webp"`.                                    |
 
 ## Component props
 
