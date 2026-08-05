@@ -11,6 +11,12 @@ The repository contains the published `astro-og-seo` package, an example app, an
 - A dev-toolbar inspector for missing, duplicate, invalid, or conflicting metadata.
 - Static image generation and request-time image rendering for server output.
 
+## Dev toolbar inspector
+
+Start the Astro dev server, open a page, hover the toolbar at the bottom of the window, and choose **SEO Inspector**. The inspector shows the generated Open Graph image alongside actionable metadata checks; expand the passed checks and scroll through the list to review them. The integration is enabled by default; keep Astro's global `devToolbar.enabled` option enabled.
+
+![Astro OG SEO dev toolbar inspector with scrollable checks](docs/dev-toolbar.gif)
+
 ## Workspace
 
 Install [Vite+](https://viteplus.dev/guide/) and run commands from the repository root:
