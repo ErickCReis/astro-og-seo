@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Require Takumi 2.10 so HTML entities in generated Open Graph images render as characters instead of literal `&#39;` markup.
+
 ## 0.2.0
 
 - Add Tailwind CSS support for generated Open Graph images, including multiple stylesheet entrypoints and a Tailwind example route.

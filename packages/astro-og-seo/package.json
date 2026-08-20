@@ -1,6 +1,6 @@
 {
   "name": "astro-og-seo",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "SEO metadata, Open Graph images, and a dev-toolbar inspector for Astro",
   "keywords": [
     "astro-component",
@@ -47,9 +47,9 @@
     "prepublishOnly": "vp run build"
   },
   "dependencies": {
-    "@takumi-rs/core": "^2.4.2",
+    "@takumi-rs/core": "^2.10.0",
     "solid-js": "^1.9.14",
-    "takumi-js": "^2.4.2"
+    "takumi-js": "^2.10.0"
   },
   "devDependencies": {
     "@tsdown/css": "^0.22.14",
