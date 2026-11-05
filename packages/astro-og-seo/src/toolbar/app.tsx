@@ -94,6 +94,21 @@ const Panel: Component = () => {
             <Show when={preview().error}>{(error) => <p class="failure">{error()}</p>}</Show>
           </section>
         </Show>
+        <Show when={snapshot.jsonLd.length > 0}>
+          <details class="structured-data">
+            <summary>Structured data</summary>
+            <For each={snapshot.jsonLd}>
+              {(block) => (
+                <article>
+                  <p class={block.error ? "failure" : undefined}>
+                    {block.error ?? (block.types.join(", ") || "No @type")}
+                  </p>
+                  <pre>{block.error ? block.text : JSON.stringify(block.data, null, 2)}</pre>
+                </article>
+              )}
+            </For>
+          </details>
+        </Show>
         <section class="diagnostics" aria-label="SEO diagnostics">
           <Show when={issues.length > 0} fallback={<p class="empty-state">No SEO issues found.</p>}>
             <div class="diagnostic-list">

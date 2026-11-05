@@ -1,9 +1,10 @@
 import { describe, expect, test } from "vite-plus/test";
-import { auditSeoSnapshot } from "../../src/toolbar/audit";
+import { auditSeoSnapshot, jsonLdTypes, type JsonLdBlock } from "../../src/toolbar/audit";
 
 describe("SEO audit", () => {
   test("passes a complete page", () => {
     const result = auditSeoSnapshot({
+      jsonLd: [],
       lang: "en",
       fields: {
         title: ["A useful title"],
@@ -22,6 +23,7 @@ describe("SEO audit", () => {
   });
   test("reports missing, duplicate, invalid, and conflicting metadata", () => {
     const result = auditSeoSnapshot({
+      jsonLd: [],
       lang: null,
       fields: {
         title: ["One", "Two"],
@@ -39,6 +41,7 @@ describe("SEO audit", () => {
   });
   test("gives actionable guidance for missing metadata and indexing choices", () => {
     const result = auditSeoSnapshot({
+      jsonLd: [],
       lang: "en-US",
       fields: {
         description: ["A useful description"],
@@ -65,6 +68,7 @@ describe("SEO audit", () => {
   });
   test("explains length, alternate-language, and article-date fixes", () => {
     const result = auditSeoSnapshot({
+      jsonLd: [],
       lang: "en-US",
       fields: {
         title: ["A".repeat(61)],
@@ -88,5 +92,41 @@ describe("SEO audit", () => {
     expect(messages).toContain('Keep exactly one hreflang="x-default" entry');
     expect(messages).toContain("Replace article:published_time with a valid date");
     expect(messages).toContain("Replace article:modified_time with a valid date");
+  });
+  test("collects distinct JSON-LD types from @graph and nested nodes", () => {
+    expect(
+      jsonLdTypes({
+        "@graph": [
+          { "@type": "BlogPosting", author: { "@type": "Person" } },
+          { "@type": ["Person", "WebSite"] },
+        ],
+      }),
+    ).toEqual(["BlogPosting", "Person", "WebSite"]);
+  });
+  test("reports JSON-LD types, untyped blocks, and unparsable blocks", () => {
+    const structuredData = (jsonLd: JsonLdBlock[]) =>
+      auditSeoSnapshot({ lang: "en", fields: {}, jsonLd }).filter(
+        (item) => item.label === "Structured data",
+      );
+
+    expect(
+      structuredData([
+        { text: "", types: ["WebSite"] },
+        { text: "", types: ["WebSite", "Person"] },
+      ]),
+    ).toEqual([
+      {
+        severity: "pass",
+        label: "Structured data",
+        message: "JSON-LD describes WebSite, Person.",
+      },
+    ]);
+    expect(
+      structuredData([{ text: "{", types: [], error: "Unexpected end of JSON input" }]),
+    ).toEqual([expect.objectContaining({ severity: "error" })]);
+    expect(structuredData([{ text: "{}", data: { "@id": "#org" }, types: [] }])).toEqual([
+      expect.objectContaining({ severity: "warning", message: expect.stringContaining("@type") }),
+    ]);
+    expect(structuredData([])).toEqual([]);
   });
 });

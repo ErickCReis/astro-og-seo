@@ -99,6 +99,20 @@ Do not combine the `image` prop with the `image` slot.
 
 Passing `article` automatically changes the Open Graph type to `article` unless `type` is set explicitly. Dates accept `Date` objects or strings that JavaScript can parse. A `summary_large_image` card requires an external image or image slot.
 
+### Structured data
+
+```astro
+<OgSeo
+  title="A useful article"
+  jsonLd={[
+    { "@type": "BlogPosting", headline: "A useful article", datePublished: "2026-07-24" },
+    { "@type": "Person", name: "Example Author" },
+  ]}
+/>
+```
+
+`jsonLd` renders one `<script type="application/ld+json">` tag. An array is wrapped in a single `@graph`, and `@context` defaults to `https://schema.org`. `<` is escaped so values cannot close the script tag. An empty object or array renders nothing. BigInt values are written as strings; values `JSON.stringify` cannot serialize, such as circular references, fail the render with an error naming the page.
+
 ## Generated images
 
 The `image` slot is rendered during static builds to `dist/_og` by default. The generated URL follows the page pathname: `/guides/intro/` becomes `/_og/guides/intro/index.png`. If the slot is omitted, no fallback image or image metadata is generated.
@@ -195,5 +209,6 @@ SSR images are served at runtime and are not written to `dist/_og` during the bu
 | `generatedImageAlt` | Alt text for an image slot; defaults to `title`.                                  |
 | `article`           | Article publication dates, authors, section, and tags.                            |
 | `twitter`           | Twitter card type, site handle, and creator handle.                               |
+| `jsonLd`            | Schema.org object or array of nodes rendered as JSON-LD.                          |
 
 The package also exports `getOgImagePathname` and its public TypeScript option and prop types from `astro-og-seo`.

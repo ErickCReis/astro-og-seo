@@ -169,3 +169,35 @@ h1 span {
 .passes .diagnostic:last-child {
   border-bottom: 0;
 }
+.structured-data {
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+}
+.structured-data summary {
+  padding: 9px 0;
+  color: var(--cyan);
+  cursor: pointer;
+  font-weight: 600;
+}
+.structured-data p {
+  margin: 0 0 4px;
+  color: var(--muted);
+}
+.structured-data .failure {
+  color: var(--red);
+}
+.structured-data pre {
+  max-height: 320px;
+  margin: 0 0 10px;
+  padding: 8px;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #02060b;
+  color: var(--ink);
+  font:
+    11px/1.45 ui-monospace,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

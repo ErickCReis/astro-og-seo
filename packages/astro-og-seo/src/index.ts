@@ -12,6 +12,7 @@ export type {
   OgSeoAlternate,
   OgSeoArticle,
   OgSeoExternalImage,
+  OgSeoJsonLd,
   OgSeoProps,
   OgSeoTwitter,
 } from "./seo/types";

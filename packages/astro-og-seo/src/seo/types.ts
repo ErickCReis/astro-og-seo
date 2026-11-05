@@ -43,6 +43,9 @@ export type OgSeoTwitter = {
   creator?: string;
 };
 
+/** A schema.org node. `object` keeps interface-typed values assignable. */
+export type OgSeoJsonLd = object;
+
 export type OgSeoProps = {
   title: string;
   description?: string;
@@ -56,6 +59,7 @@ export type OgSeoProps = {
   generatedImageAlt?: string;
   article?: OgSeoArticle;
   twitter?: OgSeoTwitter;
+  jsonLd?: OgSeoJsonLd | OgSeoJsonLd[];
 };
 
 export type ResolvedAstroOgSeoOptions = {

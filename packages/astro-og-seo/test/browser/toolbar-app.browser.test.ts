@@ -20,6 +20,7 @@ describe("toolbar app browser rendering", () => {
       <meta property="og:image" content="https://example.test/_og/browser/index.png">
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:image" content="https://example.test/_og/browser/index.png">
+      <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Browser"},{"@type":"Person","name":"Author"}]}</script>
       <template data-astro-og-seo-image="${btoa(JSON.stringify({ pathname: "/browser/", html: '<div class="card">Browser</div>', stylesheet: ".card{}" }))}"></template>
     `;
     const host = document.body.appendChild(document.createElement("div"));
@@ -70,6 +71,10 @@ describe("toolbar app browser rendering", () => {
     expect(canvas.querySelector(".diagnostic.warning p")?.textContent).toBe(
       'Add og:type, usually "website" or "article", to describe the page.',
     );
+
+    const structuredData = canvas.querySelector(".structured-data")!;
+    expect(structuredData.querySelector("p")?.textContent).toBe("WebSite, Person");
+    expect(structuredData.querySelector("pre")?.textContent).toContain('"name": "Author"');
 
     await vi.waitFor(() => {
       expect(

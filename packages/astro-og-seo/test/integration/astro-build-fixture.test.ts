@@ -66,6 +66,28 @@ describe("Astro fixture build", () => {
     expect(html).toContain("https://example.test/social/blog/hello-world/index.png");
   });
 
+  test("renders JSON-LD as one escaped @graph", async () => {
+    const html = await readFile(join(distDir, "blog", "hello-world", "index.html"), "utf8");
+    const json = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)?.[1];
+
+    expect(json).toContain("\\u003c/script>");
+    expect(JSON.parse(json!)).toEqual({
+      "@context": "https://schema.org",
+      "@graph": [
+        { "@type": "BlogPosting", headline: "Hello </script> World" },
+        { "@type": "Person", name: "Fixture Author", identifier: "42" },
+      ],
+    });
+  });
+
+  test("omits JSON-LD when the page passes none or an empty list", async () => {
+    const empty = await readFile(join(distDir, "index.html"), "utf8");
+    const missing = await readFile(join(distDir, "no-image", "index.html"), "utf8");
+
+    expect(empty).not.toContain("application/ld+json");
+    expect(missing).not.toContain("application/ld+json");
+  });
+
   test("omits OG image tags for pages without the image slot", async () => {
     const html = await readFile(join(distDir, "no-image", "index.html"), "utf8");
 

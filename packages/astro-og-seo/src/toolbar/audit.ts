@@ -1,8 +1,10 @@
 export type SeoSeverity = "error" | "warning" | "info" | "pass";
 export type SeoDiagnostic = { severity: SeoSeverity; label: string; message: string };
+export type JsonLdBlock = { text: string; types: string[]; data?: unknown; error?: string };
 export type SeoSnapshot = {
   lang: string | null;
   fields: Record<string, string[]>;
+  jsonLd: JsonLdBlock[];
 };
 
 type PresenceCheck = {
@@ -66,6 +68,22 @@ const presenceChecks: PresenceCheck[] = [
       'Add twitter:card, such as "summary" or "summary_large_image", to control the link preview.',
   },
 ];
+
+/** Every distinct @type in a JSON-LD value, including @graph members and nested nodes. */
+export function jsonLdTypes(data: unknown): string[] {
+  const types = new Set<string>();
+  const visit = (value: unknown) => {
+    if (Array.isArray(value)) return value.forEach(visit);
+    if (!value || typeof value !== "object") return;
+    for (const [key, child] of Object.entries(value)) {
+      if (key === "@type")
+        [child].flat().forEach((type) => typeof type === "string" && types.add(type));
+      else visit(child);
+    }
+  };
+  visit(data);
+  return [...types];
+}
 
 function first(snapshot: SeoSnapshot, key: string) {
   return snapshot.fields[key]?.[0]?.trim() ?? "";
@@ -203,6 +221,29 @@ export function auditSeoSnapshot(snapshot: SeoSnapshot) {
       label: "Article dates",
       message:
         "Set article:modified_time to the same time or a later time than article:published_time.",
+    });
+
+  const invalid = snapshot.jsonLd.filter((block) => block.error).length;
+  const parsed = snapshot.jsonLd.filter((block) => !block.error);
+  const types = [...new Set(parsed.flatMap((block) => block.types))];
+  if (invalid)
+    diagnostics.push({
+      severity: "error",
+      label: "Structured data",
+      message: `Fix the invalid JSON in ${invalid} application/ld+json script${invalid > 1 ? "s" : ""}; search engines ignore structured data they cannot parse.`,
+    });
+  if (types.length)
+    diagnostics.push({
+      severity: "pass",
+      label: "Structured data",
+      message: `JSON-LD describes ${types.join(", ")}.`,
+    });
+  else if (parsed.length)
+    diagnostics.push({
+      severity: "warning",
+      label: "Structured data",
+      message:
+        "Add @type to the JSON-LD nodes; search engines cannot tell what untyped structured data describes.",
     });
 
   const robots = first(snapshot, "robots");

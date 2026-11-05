@@ -1,4 +1,5 @@
 ---
+import type { OgSeoJsonLd } from "astro-og-seo";
 import OgSeo from "../../../../../src/components/OgSeo.astro";
 
 interface Props {
@@ -9,9 +10,10 @@ interface Props {
     publishedTime: Date;
     modifiedTime?: Date;
   };
+  jsonLd?: OgSeoJsonLd | OgSeoJsonLd[];
 }
 
-const { title, description, canonical, article } = Astro.props;
+const { title, description, canonical, article, jsonLd } = Astro.props;
 ---
 
 <!doctype html>
@@ -23,6 +25,7 @@ const { title, description, canonical, article } = Astro.props;
       canonical={canonical}
       alternates={[{ href: "https://example.test/pt/", hrefLang: "pt-BR" }]}
       article={article}
+      jsonLd={jsonLd}
     >
       <Fragment slot="image">
         <div class="og-image">
