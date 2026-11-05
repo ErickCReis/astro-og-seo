@@ -1,10 +1,10 @@
 export type SeoSeverity = "error" | "warning" | "info" | "pass";
 export type SeoDiagnostic = { severity: SeoSeverity; label: string; message: string };
-export type JsonLdBlock = { text: string; data?: unknown; error?: string };
+export type JsonLdBlock = { text: string; types: string[]; data?: unknown; error?: string };
 export type SeoSnapshot = {
   lang: string | null;
   fields: Record<string, string[]>;
-  jsonLd?: JsonLdBlock[];
+  jsonLd: JsonLdBlock[];
 };
 
 type PresenceCheck = {
@@ -69,13 +69,20 @@ const presenceChecks: PresenceCheck[] = [
   },
 ];
 
-/** Every @type in a JSON-LD value, including nodes inside @graph. */
+/** Every distinct @type in a JSON-LD value, including @graph members and nested nodes. */
 export function jsonLdTypes(data: unknown): string[] {
-  if (Array.isArray(data)) return data.flatMap(jsonLdTypes);
-  if (!data || typeof data !== "object") return [];
-  const node = data as Record<string, unknown>;
-  const types = [node["@type"]].flat().filter((type) => typeof type === "string");
-  return [...types, ...jsonLdTypes(node["@graph"])];
+  const types = new Set<string>();
+  const visit = (value: unknown) => {
+    if (Array.isArray(value)) return value.forEach(visit);
+    if (!value || typeof value !== "object") return;
+    for (const [key, child] of Object.entries(value)) {
+      if (key === "@type")
+        [child].flat().forEach((type) => typeof type === "string" && types.add(type));
+      else visit(child);
+    }
+  };
+  visit(data);
+  return [...types];
 }
 
 function first(snapshot: SeoSnapshot, key: string) {
@@ -216,9 +223,9 @@ export function auditSeoSnapshot(snapshot: SeoSnapshot) {
         "Set article:modified_time to the same time or a later time than article:published_time.",
     });
 
-  const jsonLd = snapshot.jsonLd ?? [];
-  const invalid = jsonLd.filter((block) => block.error).length;
-  const types = jsonLd.flatMap((block) => jsonLdTypes(block.data));
+  const invalid = snapshot.jsonLd.filter((block) => block.error).length;
+  const parsed = snapshot.jsonLd.filter((block) => !block.error);
+  const types = [...new Set(parsed.flatMap((block) => block.types))];
   if (invalid)
     diagnostics.push({
       severity: "error",
@@ -231,12 +238,12 @@ export function auditSeoSnapshot(snapshot: SeoSnapshot) {
       label: "Structured data",
       message: `JSON-LD describes ${types.join(", ")}.`,
     });
-  else if (!invalid)
+  else if (parsed.length)
     diagnostics.push({
-      severity: "info",
+      severity: "warning",
       label: "Structured data",
       message:
-        "No JSON-LD is set. Pass the jsonLd prop to describe the page to search engines and AI answer engines.",
+        "Add @type to the JSON-LD nodes; search engines cannot tell what untyped structured data describes.",
     });
 
   const robots = first(snapshot, "robots");

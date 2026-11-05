@@ -63,11 +63,22 @@ if (renderedImage && generatedPathname && astroOgSeoConfig.buildOutput === "serv
   cacheServerOgImage(generatedPathname, image);
 }
 // Arrays become one @graph. "<" is escaped so values can't close the script tag.
-const structuredData = jsonLd && JSON.stringify(
-  Array.isArray(jsonLd)
+// Empty values render nothing; BigInt IDs become strings.
+function serializeJsonLd() {
+  if (!jsonLd) return undefined;
+  const nodes = Array.isArray(jsonLd) ? jsonLd : [jsonLd];
+  if (!nodes.some((node) => Object.keys(node).length > 0)) return undefined;
+  const data = Array.isArray(jsonLd)
     ? { "@context": "https://schema.org", "@graph": jsonLd }
-    : { "@context": "https://schema.org", ...jsonLd },
-).replaceAll("<", "\\u003c");
+    : { "@context": "https://schema.org", ...jsonLd };
+  try {
+    return JSON.stringify(data, (_key, value) => typeof value === "bigint" ? value.toString() : value)
+      .replaceAll("<", "\\u003c");
+  } catch (error) {
+    throw new Error(`astro-og-seo: jsonLd on ${pathname} cannot be serialized to JSON`, { cause: error });
+  }
+}
+const structuredData = serializeJsonLd();
 const marker = renderedImage && astroOgSeoConfig.buildOutput === "static"
   ? Buffer.from(JSON.stringify({ pathname, html: renderedImage, stylesheet: astroOgSeoConfig.image && astroOgSeoConfig.image.stylesheet }), "utf8").toString("base64")
   : undefined;

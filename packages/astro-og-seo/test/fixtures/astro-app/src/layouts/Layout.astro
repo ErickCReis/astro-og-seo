@@ -1,4 +1,5 @@
 ---
+import type { OgSeoJsonLd } from "astro-og-seo";
 import OgSeo from "../../../../../src/components/OgSeo.astro";
 
 interface Props {
@@ -9,7 +10,7 @@ interface Props {
     publishedTime: Date;
     modifiedTime?: Date;
   };
-  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  jsonLd?: OgSeoJsonLd | OgSeoJsonLd[];
 }
 
 const { title, description, canonical, article, jsonLd } = Astro.props;

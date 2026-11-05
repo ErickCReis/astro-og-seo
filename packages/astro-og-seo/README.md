@@ -111,7 +111,7 @@ Passing `article` automatically changes the Open Graph type to `article` unless 
 />
 ```
 
-`jsonLd` renders one `<script type="application/ld+json">` tag. An array is wrapped in a single `@graph`, and `@context` defaults to `https://schema.org`. `<` is escaped so values cannot close the script tag.
+`jsonLd` renders one `<script type="application/ld+json">` tag. An array is wrapped in a single `@graph`, and `@context` defaults to `https://schema.org`. `<` is escaped so values cannot close the script tag. An empty object or array renders nothing. BigInt values are written as strings; values `JSON.stringify` cannot serialize, such as circular references, fail the render with an error naming the page.
 
 ## Generated images
 

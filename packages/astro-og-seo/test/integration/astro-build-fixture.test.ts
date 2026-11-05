@@ -75,15 +75,17 @@ describe("Astro fixture build", () => {
       "@context": "https://schema.org",
       "@graph": [
         { "@type": "BlogPosting", headline: "Hello </script> World" },
-        { "@type": "Person", name: "Fixture Author" },
+        { "@type": "Person", name: "Fixture Author", identifier: "42" },
       ],
     });
   });
 
-  test("omits JSON-LD when the page does not pass it", async () => {
-    const html = await readFile(join(distDir, "index.html"), "utf8");
+  test("omits JSON-LD when the page passes none or an empty list", async () => {
+    const empty = await readFile(join(distDir, "index.html"), "utf8");
+    const missing = await readFile(join(distDir, "no-image", "index.html"), "utf8");
 
-    expect(html).not.toContain("application/ld+json");
+    expect(empty).not.toContain("application/ld+json");
+    expect(missing).not.toContain("application/ld+json");
   });
 
   test("omits OG image tags for pages without the image slot", async () => {

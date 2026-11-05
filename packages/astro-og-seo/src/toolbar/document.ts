@@ -1,4 +1,4 @@
-import type { JsonLdBlock, SeoSnapshot } from "./audit";
+import { jsonLdTypes, type JsonLdBlock, type SeoSnapshot } from "./audit";
 
 function contents(selector: string) {
   return [...document.head.querySelectorAll<HTMLMetaElement>(selector)].map(
@@ -10,9 +10,10 @@ function readJsonLd(): JsonLdBlock[] {
   return [...document.querySelectorAll('script[type="application/ld+json"]')].map((script) => {
     const text = script.textContent ?? "";
     try {
-      return { text, data: JSON.parse(text) };
+      const data: unknown = JSON.parse(text);
+      return { text, data, types: jsonLdTypes(data) };
     } catch (error) {
-      return { text, error: error instanceof Error ? error.message : "Invalid JSON" };
+      return { text, types: [], error: error instanceof Error ? error.message : "Invalid JSON" };
     }
   });
 }
