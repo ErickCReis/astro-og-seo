@@ -18,6 +18,7 @@ const {
   generatedImageAlt,
   article,
   twitter = {},
+  jsonLd,
 } = Astro.props;
 const pathname = Astro.url.pathname;
 const canonicalUrl = new URL(canonical?.toString() ?? pathname, astroOgSeoConfig.site).toString();
@@ -61,6 +62,12 @@ if (renderedImage && generatedPathname && astroOgSeoConfig.buildOutput === "serv
   const image = await renderOgImage(renderedImage, { image: astroOgSeoConfig.image });
   cacheServerOgImage(generatedPathname, image);
 }
+// Arrays become one @graph. "<" is escaped so values can't close the script tag.
+const structuredData = jsonLd && JSON.stringify(
+  Array.isArray(jsonLd)
+    ? { "@context": "https://schema.org", "@graph": jsonLd }
+    : { "@context": "https://schema.org", ...jsonLd },
+).replaceAll("<", "\\u003c");
 const marker = renderedImage && astroOgSeoConfig.buildOutput === "static"
   ? Buffer.from(JSON.stringify({ pathname, html: renderedImage, stylesheet: astroOgSeoConfig.image && astroOgSeoConfig.image.stylesheet }), "utf8").toString("base64")
   : undefined;
@@ -96,5 +103,6 @@ const marker = renderedImage && astroOgSeoConfig.buildOutput === "static"
   {article?.authors?.map((author) => <meta property="article:author" content={author} />)}
   {article?.section && <meta property="article:section" content={article.section} />}
   {article?.tags?.map((tag) => <meta property="article:tag" content={tag} />)}
+  {structuredData && <script type="application/ld+json" set:html={structuredData} />}
   {marker && <template data-astro-og-seo-image={marker}></template>}
 </Fragment>

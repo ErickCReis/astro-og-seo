@@ -43,6 +43,8 @@ export type OgSeoTwitter = {
   creator?: string;
 };
 
+export type OgSeoJsonLd = Record<string, unknown>;
+
 export type OgSeoProps = {
   title: string;
   description?: string;
@@ -56,6 +58,7 @@ export type OgSeoProps = {
   generatedImageAlt?: string;
   article?: OgSeoArticle;
   twitter?: OgSeoTwitter;
+  jsonLd?: OgSeoJsonLd | OgSeoJsonLd[];
 };
 
 export type ResolvedAstroOgSeoOptions = {

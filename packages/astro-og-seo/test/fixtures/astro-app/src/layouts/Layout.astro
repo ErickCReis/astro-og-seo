@@ -9,9 +9,10 @@ interface Props {
     publishedTime: Date;
     modifiedTime?: Date;
   };
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
-const { title, description, canonical, article } = Astro.props;
+const { title, description, canonical, article, jsonLd } = Astro.props;
 ---
 
 <!doctype html>
@@ -23,6 +24,7 @@ const { title, description, canonical, article } = Astro.props;
       canonical={canonical}
       alternates={[{ href: "https://example.test/pt/", hrefLang: "pt-BR" }]}
       article={article}
+      jsonLd={jsonLd}
     >
       <Fragment slot="image">
         <div class="og-image">

@@ -10,6 +10,10 @@ import Layout from "../../layouts/Layout.astro";
     publishedTime: new Date("2026-01-02T03:04:05.000Z"),
     modifiedTime: new Date("2026-02-03T04:05:06.000Z"),
   }}
+  jsonLd={[
+    { "@type": "BlogPosting", headline: "Hello </script> World" },
+    { "@type": "Person", name: "Fixture Author" },
+  ]}
 >
   <article>Hello</article>
 </Layout>
