@@ -89,4 +89,26 @@ describe("SEO audit", () => {
     expect(messages).toContain("Replace article:published_time with a valid date");
     expect(messages).toContain("Replace article:modified_time with a valid date");
   });
+  test("lists JSON-LD types and reports unparsable blocks", () => {
+    const structuredData = (jsonLd: { text: string; data?: unknown; error?: string }[]) =>
+      auditSeoSnapshot({ lang: "en", fields: {}, jsonLd }).filter(
+        (item) => item.label === "Structured data",
+      );
+
+    expect(
+      structuredData([
+        { text: "", data: { "@graph": [{ "@type": "BlogPosting" }, { "@type": ["Person"] }] } },
+      ]),
+    ).toEqual([
+      {
+        severity: "pass",
+        label: "Structured data",
+        message: "JSON-LD describes BlogPosting, Person.",
+      },
+    ]);
+    expect(structuredData([{ text: "{", error: "Unexpected end of JSON input" }])).toEqual([
+      expect.objectContaining({ severity: "error" }),
+    ]);
+    expect(structuredData([])).toEqual([expect.objectContaining({ severity: "info" })]);
+  });
 });

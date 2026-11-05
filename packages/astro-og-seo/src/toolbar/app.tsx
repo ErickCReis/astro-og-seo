@@ -1,7 +1,7 @@
 import { defineToolbarApp } from "astro/toolbar";
 import { For, Show, createMemo, createSignal, onCleanup, onMount, type Component } from "solid-js";
 import { render } from "solid-js/web";
-import { auditSeoSnapshot, type SeoSeverity } from "./audit";
+import { auditSeoSnapshot, jsonLdTypes, type SeoSeverity } from "./audit";
 import { decodeTemplate, getOgTemplate, readSeoSnapshot } from "./document";
 // @ts-ignore generated as an inline string by the package build
 import styles from "./app.css?inline";
@@ -32,6 +32,7 @@ const Panel: Component = () => {
       (left, right) => severityOrder.indexOf(left.severity) - severityOrder.indexOf(right.severity),
     );
   const passes = diagnostics.filter((item) => item.severity === "pass");
+  const jsonLd = snapshot.jsonLd ?? [];
   let active = true;
 
   onMount(async () => {
@@ -93,6 +94,21 @@ const Panel: Component = () => {
             </Show>
             <Show when={preview().error}>{(error) => <p class="failure">{error()}</p>}</Show>
           </section>
+        </Show>
+        <Show when={jsonLd.length > 0}>
+          <details class="structured-data">
+            <summary>Structured data</summary>
+            <For each={jsonLd}>
+              {(block) => (
+                <article>
+                  <p class={block.error ? "failure" : undefined}>
+                    {block.error ?? (jsonLdTypes(block.data).join(", ") || "No @type")}
+                  </p>
+                  <pre>{block.error ? block.text : JSON.stringify(block.data, null, 2)}</pre>
+                </article>
+              )}
+            </For>
+          </details>
         </Show>
         <section class="diagnostics" aria-label="SEO diagnostics">
           <Show when={issues.length > 0} fallback={<p class="empty-state">No SEO issues found.</p>}>

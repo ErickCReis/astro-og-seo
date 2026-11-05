@@ -1,8 +1,10 @@
 export type SeoSeverity = "error" | "warning" | "info" | "pass";
 export type SeoDiagnostic = { severity: SeoSeverity; label: string; message: string };
+export type JsonLdBlock = { text: string; data?: unknown; error?: string };
 export type SeoSnapshot = {
   lang: string | null;
   fields: Record<string, string[]>;
+  jsonLd?: JsonLdBlock[];
 };
 
 type PresenceCheck = {
@@ -66,6 +68,15 @@ const presenceChecks: PresenceCheck[] = [
       'Add twitter:card, such as "summary" or "summary_large_image", to control the link preview.',
   },
 ];
+
+/** Every @type in a JSON-LD value, including nodes inside @graph. */
+export function jsonLdTypes(data: unknown): string[] {
+  if (Array.isArray(data)) return data.flatMap(jsonLdTypes);
+  if (!data || typeof data !== "object") return [];
+  const node = data as Record<string, unknown>;
+  const types = [node["@type"]].flat().filter((type) => typeof type === "string");
+  return [...types, ...jsonLdTypes(node["@graph"])];
+}
 
 function first(snapshot: SeoSnapshot, key: string) {
   return snapshot.fields[key]?.[0]?.trim() ?? "";
@@ -203,6 +214,29 @@ export function auditSeoSnapshot(snapshot: SeoSnapshot) {
       label: "Article dates",
       message:
         "Set article:modified_time to the same time or a later time than article:published_time.",
+    });
+
+  const jsonLd = snapshot.jsonLd ?? [];
+  const invalid = jsonLd.filter((block) => block.error).length;
+  const types = jsonLd.flatMap((block) => jsonLdTypes(block.data));
+  if (invalid)
+    diagnostics.push({
+      severity: "error",
+      label: "Structured data",
+      message: `Fix the invalid JSON in ${invalid} application/ld+json script${invalid > 1 ? "s" : ""}; search engines ignore structured data they cannot parse.`,
+    });
+  if (types.length)
+    diagnostics.push({
+      severity: "pass",
+      label: "Structured data",
+      message: `JSON-LD describes ${types.join(", ")}.`,
+    });
+  else if (!invalid)
+    diagnostics.push({
+      severity: "info",
+      label: "Structured data",
+      message:
+        "No JSON-LD is set. Pass the jsonLd prop to describe the page to search engines and AI answer engines.",
     });
 
   const robots = first(snapshot, "robots");
