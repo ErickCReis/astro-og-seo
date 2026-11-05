@@ -3,6 +3,7 @@
 ## 0.3.0
 
 - Add a `jsonLd` prop that renders schema.org structured data as one escaped JSON-LD script, wrapping arrays in a single `@graph`.
+- Show a page's JSON-LD in the SEO inspector, and report unparsable structured data as an error.
 
 ## 0.2.1
 
